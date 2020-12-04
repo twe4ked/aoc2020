@@ -49,10 +49,7 @@
 const MAGIC_NUMBER: usize = 2020;
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::env::args().skip(1).next().expect("no input file");
-
-    let input = std::fs::read(path)?;
-    let input: Vec<_> = String::from_utf8_lossy(&input)
+    let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| -> usize { l.parse().unwrap() })
         .collect();

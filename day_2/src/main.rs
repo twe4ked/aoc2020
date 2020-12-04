@@ -51,10 +51,7 @@
 // How many passwords are valid according to the new interpretation of the policies?
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let path = std::env::args().skip(1).next().expect("no input file");
-
-    let input = std::fs::read(path)?;
-    let input: Vec<String> = String::from_utf8_lossy(&input)
+    let input = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
         .collect();
