@@ -57,8 +57,82 @@
 //
 // Count the number of valid passports - those that have all required fields. Treat cid as
 // optional. In your batch file, how many passports are valid?
+//
+// --- Part Two ---
+//
+// The line is moving more quickly now, but you overhear airport security talking about how
+// passports with invalid data are getting through. Better add some data validation, quick!
+//
+// You can continue to ignore the cid field, but each other field has strict rules about what
+// values are valid for automatic validation:
+//
+//     byr (Birth Year) - four digits; at least 1920 and at most 2002.
+//     iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+//     eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+//     hgt (Height) - a number followed by either cm or in:
+//         If cm, the number must be at least 150 and at most 193.
+//         If in, the number must be at least 59 and at most 76.
+//     hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+//     ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+//     pid (Passport ID) - a nine-digit number, including leading zeroes.
+//     cid (Country ID) - ignored, missing or not.
+//
+// Your job is to count the passports where all required fields are both present and valid
+// according to the above rules. Here are some example values:
+//
+// byr valid:   2002
+// byr invalid: 2003
+//
+// hgt valid:   60in
+// hgt valid:   190cm
+// hgt invalid: 190in
+// hgt invalid: 190
+//
+// hcl valid:   #123abc
+// hcl invalid: #123abz
+// hcl invalid: 123abc
+//
+// ecl valid:   brn
+// ecl invalid: wat
+//
+// pid valid:   000000001
+// pid invalid: 0123456789
+//
+// Here are some invalid passports:
+//
+// eyr:1972 cid:100
+// hcl:#18171d ecl:amb hgt:170 pid:186cm iyr:2018 byr:1926
+//
+// iyr:2019
+// hcl:#602927 eyr:1967 hgt:170cm
+// ecl:grn pid:012533040 byr:1946
+//
+// hcl:dab227 iyr:2012
+// ecl:brn hgt:182cm pid:021572410 eyr:2020 byr:1992 cid:277
+//
+// hgt:59cm ecl:zzz
+// eyr:2038 hcl:74454a iyr:2023
+// pid:3556412378 byr:2007
+//
+// Here are some valid passports:
+//
+// pid:087499704 hgt:74in ecl:grn iyr:2012 eyr:2030 byr:1980
+// hcl:#623a2f
+//
+// eyr:2029 ecl:blu cid:129 byr:1989
+// iyr:2014 pid:896056539 hcl:#a97842 hgt:165cm
+//
+// hcl:#888785
+// hgt:164cm byr:2001 iyr:2015 cid:88
+// pid:545766238 ecl:hzl
+// eyr:2022
+//
+// iyr:2010 hgt:158cm hcl:#b6652a ecl:blu byr:1944 eyr:2021 pid:093154719
+//
+// Count the number of valid passports - those that have all required fields and valid values.
+// Continue to treat cid as optional. In your batch file, how many passports are valid?
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = include_str!("../input")
@@ -67,6 +141,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .collect();
 
     println!("Part 1: {}", part_1(&input)); // => 204
+    println!("Part 2: {}", part_2(&input)); // => 179
 
     Ok(())
 }
@@ -89,6 +164,125 @@ fn part_1(input: &Vec<String>) -> usize {
     });
 
     valid.count()
+}
+
+fn part_2(input: &Vec<String>) -> usize {
+    let valid = input.iter().filter(|passport| {
+        let x: HashMap<_, _> = passport
+            .split_whitespace()
+            .map(|kv| {
+                let mut iter = kv.split(":");
+                (iter.next().unwrap(), iter.next().unwrap())
+            })
+            .collect();
+
+        valid(x)
+    });
+
+    valid.count()
+}
+
+fn valid(input: HashMap<&str, &str>) -> bool {
+    // byr (Birth Year) - four digits; at least 1920 and at most 2002.
+    if let Some(byr) = input.get("byr") {
+        let byr: usize = byr.parse().unwrap();
+        if !(1920..=2002).contains(&byr) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+    if let Some(iyr) = input.get("iyr") {
+        let iyr: usize = iyr.parse().unwrap();
+        if !(2010..=2020).contains(&iyr) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+    if let Some(eyr) = input.get("eyr") {
+        let eyr: usize = eyr.parse().unwrap();
+        if !(2020..=2030).contains(&eyr) {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // hgt (Height) - a number followed by either cm or in:
+    //     If cm, the number must be at least 150 and at most 193.
+    //     If in, the number must be at least 59 and at most 76.
+    if let Some(hgt) = input.get("hgt") {
+        if let Some(cm) = hgt.strip_suffix("cm") {
+            let cm: usize = cm.parse().unwrap();
+            if !(150..=193).contains(&cm) {
+                return false;
+            }
+        } else if let Some(inches) = hgt.strip_suffix("in") {
+            let inches: usize = inches.parse().unwrap();
+            if !(59..=76).contains(&inches) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+    if let Some(hcl) = input.get("hcl") {
+        if let Some(hcl) = hcl.strip_prefix('#') {
+            if hcl
+                .matches(
+                    [
+                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
+                        'f',
+                    ]
+                    .as_ref(),
+                )
+                .count()
+                != 6
+            {
+                return false;
+            }
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+    if let Some(ecl) = input.get("ecl") {
+        if !["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+            .as_ref()
+            .contains(ecl)
+        {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    // pid (Passport ID) - a nine-digit number, including leading zeroes.
+    if let Some(pid) = input.get("pid") {
+        if pid
+            .matches(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].as_ref())
+            .count()
+            != 9
+        {
+            return false;
+        }
+    } else {
+        return false;
+    }
+
+    true
 }
 
 #[cfg(test)]
