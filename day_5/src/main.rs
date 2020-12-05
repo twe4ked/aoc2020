@@ -84,11 +84,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 }
 
 fn part_1(input: &Vec<String>) -> usize {
-    input.iter().map(|line| seat(line).2).max().unwrap()
+    input.iter().map(|line| seat_id(line)).max().unwrap()
 }
 
 fn part_2(input: &Vec<String>) -> usize {
-    let mut taken_seats: Vec<_> = input.iter().map(|line| seat(line).2).collect();
+    let mut taken_seats: Vec<_> = input.iter().map(|line| seat_id(line)).collect();
     taken_seats.sort_unstable();
 
     for seats in taken_seats.windows(2) {
@@ -104,35 +104,35 @@ fn part_2(input: &Vec<String>) -> usize {
     unreachable!();
 }
 
-fn seat(input: &str) -> (usize, usize, usize) {
+fn seat_id(input: &str) -> usize {
     let mut row_min = 0;
     let mut row_max = 127;
 
     let mut col_min = 0;
     let mut col_max = 7;
 
+    let calc = |min, max| max - ((max - min) / 2);
+
     for c in input.chars() {
         match c {
             'F' => {
-                row_max = row_max - ((row_max - row_min) / 2);
+                row_max = calc(row_min, row_max);
             }
             'B' => {
-                row_min = row_max - ((row_max - row_min) / 2);
+                row_min = calc(row_min, row_max);
             }
             'R' => {
-                col_min = col_max - ((col_max - col_min) / 2);
+                col_min = calc(col_min, col_max);
             }
             'L' => {
-                col_max = col_max - ((col_max - col_min) / 2);
+                col_max = calc(col_min, col_max);
             }
             _ => panic!("unknown input: {}", c),
         }
     }
 
     // Every seat also has a unique seat ID: multiply the row by 8, then add the col.
-    let id = row_min * 8 + col_min;
-
-    (row_min, col_min, id)
+    row_min * 8 + col_min
 }
 
 #[cfg(test)]
@@ -142,12 +142,12 @@ mod tests {
     #[test]
     fn readme_example() {
         // BFFFBBFRRR: row 70, column 7, seat ID 567.
-        assert_eq!(seat(&"BFFFBBFRRR"), (70, 7, 567));
+        assert_eq!(seat_id(&"BFFFBBFRRR"), 567);
 
         // FFFBBBFRRR: row 14, column 7, seat ID 119.
-        assert_eq!(seat(&"FFFBBBFRRR"), (14, 7, 119));
+        assert_eq!(seat_id(&"FFFBBBFRRR"), 119);
 
         // BBFFBBFRLL: row 102, column 4, seat ID 820.
-        assert_eq!(seat(&"BBFFBBFRLL"), (102, 4, 820));
+        assert_eq!(seat_id(&"BBFFBBFRLL"), 820);
     }
 }
