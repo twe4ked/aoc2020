@@ -140,10 +140,34 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         .map(|l| l.to_owned())
         .collect();
 
-    println!("Part 1: {}", part_1(&input)); // => 204
-    println!("Part 2: {}", part_2(&input)); // => 179
+    let part_1 = part_1(&input);
+    assert_eq!(part_1, 204);
+    println!("Part 1: {}", part_1);
+
+    let part_2 = part_2(&input);
+    assert_eq!(part_2, 179);
+    println!("Part 2: {}", part_2);
 
     Ok(())
+}
+
+fn validate_passports<F>(input: &Vec<String>, f: F) -> usize
+where
+    F: Fn(HashMap<&str, &str>) -> bool,
+{
+    let valid = input.iter().filter(|passport| {
+        let passport: HashMap<_, _> = passport
+            .split_whitespace()
+            .map(|kv| {
+                let mut iter = kv.split(':');
+                (iter.next().unwrap(), iter.next().unwrap())
+            })
+            .collect();
+
+        f(passport)
+    });
+
+    valid.count()
 }
 
 fn part_1(input: &Vec<String>) -> usize {
@@ -151,138 +175,115 @@ fn part_1(input: &Vec<String>) -> usize {
         .into_iter()
         .collect();
 
-    let valid = input.iter().filter(|passport| {
-        let x: HashSet<_> = passport
-            .split_whitespace()
-            .map(|kv| {
-                let mut iter = kv.split(":");
-                iter.next().unwrap()
-            })
-            .collect();
-
-        x.is_superset(&required_fields)
-    });
-
-    valid.count()
+    validate_passports(input, |passport| {
+        let set: HashSet<&str> = passport.keys().copied().collect();
+        set.is_superset(&required_fields)
+    })
 }
 
 fn part_2(input: &Vec<String>) -> usize {
-    let valid = input.iter().filter(|passport| {
-        let x: HashMap<_, _> = passport
-            .split_whitespace()
-            .map(|kv| {
-                let mut iter = kv.split(":");
-                (iter.next().unwrap(), iter.next().unwrap())
-            })
-            .collect();
-
-        valid(x)
-    });
-
-    valid.count()
-}
-
-fn valid(input: HashMap<&str, &str>) -> bool {
-    // byr (Birth Year) - four digits; at least 1920 and at most 2002.
-    if let Some(byr) = input.get("byr") {
-        let byr: usize = byr.parse().unwrap();
-        if !(1920..=2002).contains(&byr) {
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    // iyr (Issue Year) - four digits; at least 2010 and at most 2020.
-    if let Some(iyr) = input.get("iyr") {
-        let iyr: usize = iyr.parse().unwrap();
-        if !(2010..=2020).contains(&iyr) {
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    // eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
-    if let Some(eyr) = input.get("eyr") {
-        let eyr: usize = eyr.parse().unwrap();
-        if !(2020..=2030).contains(&eyr) {
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    // hgt (Height) - a number followed by either cm or in:
-    //     If cm, the number must be at least 150 and at most 193.
-    //     If in, the number must be at least 59 and at most 76.
-    if let Some(hgt) = input.get("hgt") {
-        if let Some(cm) = hgt.strip_suffix("cm") {
-            let cm: usize = cm.parse().unwrap();
-            if !(150..=193).contains(&cm) {
-                return false;
-            }
-        } else if let Some(inches) = hgt.strip_suffix("in") {
-            let inches: usize = inches.parse().unwrap();
-            if !(59..=76).contains(&inches) {
+    validate_passports(input, |input| {
+        // byr (Birth Year) - four digits; at least 1920 and at most 2002.
+        if let Some(byr) = input.get("byr") {
+            let byr: usize = byr.parse().unwrap();
+            if !(1920..=2002).contains(&byr) {
                 return false;
             }
         } else {
             return false;
         }
-    } else {
-        return false;
-    }
 
-    // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
-    if let Some(hcl) = input.get("hcl") {
-        if let Some(hcl) = hcl.strip_prefix('#') {
-            if hcl
-                .matches(
-                    [
-                        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e',
-                        'f',
-                    ]
-                    .as_ref(),
-                )
-                .count()
-                != 6
+        // iyr (Issue Year) - four digits; at least 2010 and at most 2020.
+        if let Some(iyr) = input.get("iyr") {
+            let iyr: usize = iyr.parse().unwrap();
+            if !(2010..=2020).contains(&iyr) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // eyr (Expiration Year) - four digits; at least 2020 and at most 2030.
+        if let Some(eyr) = input.get("eyr") {
+            let eyr: usize = eyr.parse().unwrap();
+            if !(2020..=2030).contains(&eyr) {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // hgt (Height) - a number followed by either cm or in:
+        //     If cm, the number must be at least 150 and at most 193.
+        //     If in, the number must be at least 59 and at most 76.
+        if let Some(hgt) = input.get("hgt") {
+            if let Some(cm) = hgt.strip_suffix("cm") {
+                let cm: usize = cm.parse().unwrap();
+                if !(150..=193).contains(&cm) {
+                    return false;
+                }
+            } else if let Some(inches) = hgt.strip_suffix("in") {
+                let inches: usize = inches.parse().unwrap();
+                if !(59..=76).contains(&inches) {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
+        if let Some(hcl) = input.get("hcl") {
+            if let Some(hcl) = hcl.strip_prefix('#') {
+                if hcl
+                    .matches(
+                        [
+                            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
+                            'e', 'f',
+                        ]
+                        .as_ref(),
+                    )
+                    .count()
+                    != 6
+                {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
+
+        // ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
+        if let Some(ecl) = input.get("ecl") {
+            if !["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
+                .as_ref()
+                .contains(ecl)
             {
                 return false;
             }
         } else {
             return false;
         }
-    } else {
-        return false;
-    }
 
-    // ecl (Eye Color) - exactly one of: amb blu brn gry grn hzl oth.
-    if let Some(ecl) = input.get("ecl") {
-        if !["amb", "blu", "brn", "gry", "grn", "hzl", "oth"]
-            .as_ref()
-            .contains(ecl)
-        {
+        // pid (Passport ID) - a nine-digit number, including leading zeroes.
+        if let Some(pid) = input.get("pid") {
+            if pid
+                .matches(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].as_ref())
+                .count()
+                != 9
+            {
+                return false;
+            }
+        } else {
             return false;
         }
-    } else {
-        return false;
-    }
 
-    // pid (Passport ID) - a nine-digit number, including leading zeroes.
-    if let Some(pid) = input.get("pid") {
-        if pid
-            .matches(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].as_ref())
-            .count()
-            != 9
-        {
-            return false;
-        }
-    } else {
-        return false;
-    }
-
-    true
+        true
+    })
 }
 
 #[cfg(test)]
