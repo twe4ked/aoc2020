@@ -237,17 +237,7 @@ fn part_2(input: &Vec<String>) -> usize {
         // hcl (Hair Color) - a # followed by exactly six characters 0-9 or a-f.
         if let Some(hcl) = input.get("hcl") {
             if let Some(hcl) = hcl.strip_prefix('#') {
-                if hcl
-                    .matches(
-                        [
-                            '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd',
-                            'e', 'f',
-                        ]
-                        .as_ref(),
-                    )
-                    .count()
-                    != 6
-                {
+                if hcl.matches(|c: char| c.is_ascii_hexdigit()).count() != 6 {
                     return false;
                 }
             } else {
@@ -271,11 +261,7 @@ fn part_2(input: &Vec<String>) -> usize {
 
         // pid (Passport ID) - a nine-digit number, including leading zeroes.
         if let Some(pid) = input.get("pid") {
-            if pid
-                .matches(['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'].as_ref())
-                .count()
-                != 9
-            {
+            if pid.matches(char::is_numeric).count() != 9 {
                 return false;
             }
         } else {
