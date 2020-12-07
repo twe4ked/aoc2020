@@ -96,7 +96,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let input = include_str!("../input")
         .split("\n\n")
         .map(|l| l.to_owned())
@@ -109,8 +109,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let part_2 = part_2(&input);
     assert_eq!(part_2, 3039);
     println!("Part 2: {}", part_2);
-
-    Ok(())
 }
 
 fn part_1(input: &Vec<String>) -> usize {

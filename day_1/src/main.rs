@@ -48,7 +48,7 @@
 
 const MAGIC_NUMBER: usize = 2020;
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| -> usize { l.parse().unwrap() })
@@ -56,8 +56,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Part 1: {}", day_1(&input).expect("no match"));
     println!("Part 2: {}", day_1_part_2(&input).expect("no match"));
-
-    Ok(())
 }
 
 fn day_1(input: &[usize]) -> Option<usize> {

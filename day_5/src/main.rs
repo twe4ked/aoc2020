@@ -66,7 +66,7 @@
 //
 // What is the ID of your seat?
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let input = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
@@ -79,8 +79,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let part_2 = part_2(&input);
     assert_eq!(part_2, 671);
     println!("Part 2: {}", part_2);
-
-    Ok(())
 }
 
 fn part_1(input: &Vec<String>) -> usize {

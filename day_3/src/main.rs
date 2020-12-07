@@ -86,7 +86,7 @@
 // What do you get if you multiply together the number of trees encountered on each of the listed
 // slopes?
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let input = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
@@ -94,8 +94,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Part 1: {}", part_1(&input)); // => 230
     println!("Part 2: {}", part_2(&input)); // => 9533698720
-
-    Ok(())
 }
 
 fn wrap(input: usize, max: usize) -> usize {

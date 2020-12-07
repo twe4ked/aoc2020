@@ -50,7 +50,7 @@
 //
 // How many passwords are valid according to the new interpretation of the policies?
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
+fn main() {
     let input = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
@@ -58,8 +58,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Part 1: {}", valid_passwords(&input));
     println!("Part 2: {}", valid_passwords_part_2(&input));
-
-    Ok(())
 }
 
 struct Line {
