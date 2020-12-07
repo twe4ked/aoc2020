@@ -53,8 +53,48 @@
 //
 // For each group, count the number of questions to which anyone answered "yes". What is the sum of
 // those counts?
+//
+// --- Part Two ---
+//
+// As you finish the last group's customs declaration, you notice that you misread one word in the
+// instructions:
+//
+// You don't need to identify the questions to which anyone answered "yes"; you need to identify
+// the questions to which everyone answered "yes"!
+//
+// Using the same example as above:
+//
+// abc
+//
+// a
+// b
+// c
+//
+// ab
+// ac
+//
+// a
+// a
+// a
+// a
+//
+// b
+//
+// This list represents answers from five groups:
+//
+//     - In the first group, everyone (all 1 person) answered "yes" to 3 questions: a, b, and c.
+//     - In the second group, there is no question to which everyone answered "yes".
+//     - In the third group, everyone answered yes to only 1 question, a. Since some people did not
+//       answer "yes" to b or c, they don't count.
+//     - In the fourth group, everyone answered yes to only 1 question, a.
+//     - In the fifth group, everyone (all 1 person) answered "yes" to 1 question, b.
+//
+// In this example, the sum of these counts is 3 + 0 + 1 + 1 + 1 = 6.
+//
+// For each group, count the number of questions to which everyone answered "yes". What is the sum
+// of those counts?
 
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let input = include_str!("../input")
@@ -65,6 +105,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let part_1 = part_1(&input);
     assert_eq!(part_1, 6387);
     println!("Part 1: {}", part_1);
+
+    let part_2 = part_2(&input);
+    assert_eq!(part_2, 3039);
+    println!("Part 2: {}", part_2);
 
     Ok(())
 }
@@ -78,6 +122,41 @@ fn part_1(input: &Vec<String>) -> usize {
                 .filter(char::is_ascii_alphabetic)
                 .collect::<HashSet<_>>()
                 .len()
+        })
+        .sum()
+}
+
+fn part_2(input: &Vec<String>) -> usize {
+    input
+        .iter()
+        .map(|group| {
+            // abc => [abc]
+            //
+            // a
+            // b
+            // c => [a, b, c]
+            //
+            // ab
+            // ac => [ab, ac]
+            let people: Vec<_> = group.split_whitespace().collect();
+
+            // For each person
+            let mut map = people.iter().fold(HashMap::new(), |mut map, person| {
+                // iterate through their votes
+                for c in person.chars() {
+                    // and count how many votes each char got
+                    let count = map.entry(c).or_insert(0);
+                    *count += 1;
+                }
+                map
+            });
+
+            let count = people.len();
+
+            // Only retain the chars where all people (count) voted
+            map.retain(|_k, v| v == &count);
+
+            map.len()
         })
         .sum()
 }
@@ -135,5 +214,15 @@ mod tests {
         //       only 1 question, a.
         //     - The last group contains one person who answered "yes" to only 1 question, b.
         assert_eq!(part_1(&input), 11);
+
+        // This list represents answers from five groups:
+        //
+        //     - In the first group, everyone (all 1 person) answered "yes" to 3 questions: a, b, and c.
+        //     - In the second group, there is no question to which everyone answered "yes".
+        //     - In the third group, everyone answered yes to only 1 question, a. Since some people did not
+        //       answer "yes" to b or c, they don't count.
+        //     - In the fourth group, everyone answered yes to only 1 question, a.
+        //     - In the fifth group, everyone (all 1 person) answered "yes" to 1 question, b.
+        assert_eq!(part_2(&input), 6);
     }
 }
