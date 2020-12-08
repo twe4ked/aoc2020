@@ -57,7 +57,7 @@ fn main() {
 use petgraph::graphmap::DiGraphMap;
 use std::collections::HashSet;
 
-fn part_1(input: &Vec<String>) -> usize {
+fn graph<'a>(input: &'a Vec<String>) -> DiGraphMap<&'a str, ()> {
     let mut graph: DiGraphMap<&str, ()> = Default::default();
 
     for line in input {
@@ -95,6 +95,12 @@ fn part_1(input: &Vec<String>) -> usize {
     //     use petgraph::dot::{Config, Dot};
     //     println!("{:?}", Dot::with_config(&graph, &[Config::EdgeNoLabel]));
     // }
+
+    graph
+}
+
+fn part_1(input: &Vec<String>) -> usize {
+    let graph = graph(input);
 
     fn neighbors<'a>(graph: &DiGraphMap<&'a str, ()>, node: &'a str) -> HashSet<&'a str> {
         graph
