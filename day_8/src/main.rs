@@ -194,11 +194,7 @@ impl Vm {
 fn part_1(input: &str) -> usize {
     let instructions = decode(input);
 
-    let mut vm = Vm {
-        pc: 0,
-        acc: 0,
-        visited: HashSet::new(),
-    };
+    let mut vm = Vm::new();
 
     loop {
         match vm.execute(&instructions) {
