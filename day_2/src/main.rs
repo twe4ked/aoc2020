@@ -56,8 +56,13 @@ fn main() {
         .map(|l| l.to_owned())
         .collect();
 
-    println!("Part 1: {}", valid_passwords(&input));
-    println!("Part 2: {}", valid_passwords_part_2(&input));
+    let part_1 = valid_passwords(&input);
+    println!("Part 1: {}", part_1);
+    assert_eq!(part_1, 564);
+
+    let part_2 = valid_passwords_part_2(&input);
+    println!("Part 2: {}", part_2);
+    assert_eq!(part_2, 325);
 }
 
 struct Line {

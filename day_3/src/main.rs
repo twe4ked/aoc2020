@@ -92,8 +92,13 @@ fn main() {
         .map(|l| l.to_owned())
         .collect();
 
-    println!("Part 1: {}", part_1(&input)); // => 230
-    println!("Part 2: {}", part_2(&input)); // => 9533698720
+    let part_1 = part_1(&input);
+    assert_eq!(part_1, 230);
+    println!("Part 1: {}", part_1);
+
+    let part_2 = part_2(&input);
+    assert_eq!(part_2, 9533698720);
+    println!("Part 2: {}", part_2);
 }
 
 fn wrap(input: usize, max: usize) -> usize {

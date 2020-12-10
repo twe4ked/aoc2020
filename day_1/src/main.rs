@@ -54,8 +54,13 @@ fn main() {
         .map(|l| -> usize { l.parse().unwrap() })
         .collect();
 
-    println!("Part 1: {}", day_1(&input).expect("no match"));
-    println!("Part 2: {}", day_1_part_2(&input).expect("no match"));
+    let part_1 = day_1(&input).expect("no match");
+    println!("Part 1: {}", part_1);
+    assert_eq!(part_1, 788739);
+
+    let part_2 = day_1_part_2(&input).expect("no match");
+    println!("Part 2: {}", part_2);
+    assert_eq!(part_2, 178724430);
 }
 
 fn day_1(input: &[usize]) -> Option<usize> {
