@@ -67,7 +67,7 @@
 // What is the ID of your seat?
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
         .collect();
@@ -81,11 +81,11 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-fn part_1(input: &Vec<String>) -> usize {
+fn part_1(input: &[String]) -> usize {
     input.iter().map(|line| seat_id(line)).max().unwrap()
 }
 
-fn part_2(input: &Vec<String>) -> usize {
+fn part_2(input: &[String]) -> usize {
     let mut taken_seats: Vec<_> = input.iter().map(|line| seat_id(line)).collect();
     taken_seats.sort_unstable();
 

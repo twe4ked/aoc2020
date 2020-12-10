@@ -129,8 +129,8 @@ fn invalid_number(input: &[usize], preamble_len: usize) -> usize {
         .skip(preamble_len + 1)
         .enumerate()
         .find(|(i, n)| {
-            for x in input.into_iter().skip(*i) {
-                for y in input.into_iter().skip(*i) {
+            for x in input.iter().skip(*i) {
+                for y in input.iter().skip(*i) {
                     if x + y == **n {
                         // If we find a matching sum, we continue searching for an invalid number
                         return false;
@@ -155,15 +155,19 @@ fn part_2(input: &str, preamble_len: usize) -> usize {
         loop {
             acc += input[j];
 
-            if acc == invalid_number {
-                // When we find the invalid number, find the min and max values from the range and
-                // add return the sum.
-                let mut range = input[i..j].to_vec();
-                range.sort_unstable();
-                return range.first().unwrap() + range.last().unwrap();
-            } else if acc > invalid_number {
-                // If we go past the invalid number, break and try again on the next iteration
-                break;
+            match acc {
+                x if x == invalid_number => {
+                    // When we find the invalid number, find the min and max values from the range and
+                    // add return the sum.
+                    let mut range = input[i..j].to_vec();
+                    range.sort_unstable();
+                    return range.first().unwrap() + range.last().unwrap();
+                }
+                x if x > invalid_number => {
+                    // If we go past the invalid number, break and try again on the next iteration
+                    break;
+                }
+                _ => {}
             }
 
             j += 1;

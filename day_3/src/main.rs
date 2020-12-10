@@ -87,7 +87,7 @@
 // slopes?
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
         .collect();
@@ -109,11 +109,11 @@ fn wrap(input: usize, max: usize) -> usize {
     }
 }
 
-fn part_1(input: &Vec<String>) -> usize {
+fn part_1(input: &[String]) -> usize {
     inner(input, 3, 1)
 }
 
-fn part_2(input: &Vec<String>) -> usize {
+fn part_2(input: &[String]) -> usize {
     inner(input, 1, 1)
         * inner(input, 3, 1)
         * inner(input, 5, 1)
@@ -121,7 +121,7 @@ fn part_2(input: &Vec<String>) -> usize {
         * inner(input, 1, 2)
 }
 
-fn inner(input: &Vec<String>, right: usize, down: usize) -> usize {
+fn inner(input: &[String], right: usize, down: usize) -> usize {
     let width = input[0].len();
     let mut trees = 0;
     let mut x = 0;
@@ -145,7 +145,7 @@ mod tests {
 
     #[test]
     fn readme_example() {
-        let input = vec![
+        let input: Vec<_> = vec![
             "..##.......",
             "#...#...#..",
             ".#....#..#.",

@@ -97,7 +97,7 @@
 use std::collections::{HashMap, HashSet};
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .split("\n\n")
         .map(|l| l.to_owned())
         .collect();
@@ -111,7 +111,7 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-fn part_1(input: &Vec<String>) -> usize {
+fn part_1(input: &[String]) -> usize {
     input
         .iter()
         .map(|group| {
@@ -124,7 +124,7 @@ fn part_1(input: &Vec<String>) -> usize {
         .sum()
 }
 
-fn part_2(input: &Vec<String>) -> usize {
+fn part_2(input: &[String]) -> usize {
     input
         .iter()
         .map(|group| {

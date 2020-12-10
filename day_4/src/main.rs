@@ -135,7 +135,7 @@
 use std::collections::{HashMap, HashSet};
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .split("\n\n")
         .map(|l| l.to_owned())
         .collect();
@@ -149,7 +149,7 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-fn validate_passports<F>(input: &Vec<String>, f: F) -> usize
+fn validate_passports<F>(input: &[String], f: F) -> usize
 where
     F: Fn(HashMap<&str, &str>) -> bool,
 {
@@ -168,7 +168,7 @@ where
     valid.count()
 }
 
-fn part_1(input: &Vec<String>) -> usize {
+fn part_1(input: &[String]) -> usize {
     let required_fields: HashSet<_> = vec!["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid"]
         .into_iter()
         .collect();
@@ -179,7 +179,7 @@ fn part_1(input: &Vec<String>) -> usize {
     })
 }
 
-fn part_2(input: &Vec<String>) -> usize {
+fn part_2(input: &[String]) -> usize {
     validate_passports(input, |input| {
         // byr (Birth Year) - four digits; at least 1920 and at most 2002.
         if let Some(byr) = input.get("byr") {
@@ -276,7 +276,7 @@ mod tests {
 
     #[test]
     fn readme_example() {
-        let input = vec![
+        let input: Vec<_> = vec![
             // 1
             "ecl:gry pid:860033327 eyr:2020 hcl:#fffffd
             byr:1937 iyr:2017 cid:147 hgt:183cm",

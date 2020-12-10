@@ -77,7 +77,7 @@
 // How many individual bags are required inside your single shiny gold bag?
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
         .collect();
@@ -107,7 +107,7 @@ impl<'a> Graph<'a> {
     fn add_edge(&mut self, from: &'a str, to: &'a str, weight: usize) {
         self.graph
             .entry(from)
-            .or_insert(HashMap::new())
+            .or_insert_with(HashMap::new)
             .insert(to, weight);
     }
 
@@ -122,11 +122,11 @@ impl<'a> Graph<'a> {
         self.graph
             .get(id)
             .map(|hash| hash.iter().map(|(id, weight)| (*id, *weight)).collect())
-            .unwrap_or(Vec::new())
+            .unwrap_or_default()
     }
 }
 
-fn graph<'a>(input: &'a Vec<String>) -> Graph<'a> {
+fn graph(input: &[String]) -> Graph {
     let mut graph = Graph::new();
 
     for line in input {
@@ -163,7 +163,7 @@ fn graph<'a>(input: &'a Vec<String>) -> Graph<'a> {
     graph
 }
 
-fn part_1(input: &Vec<String>) -> usize {
+fn part_1(input: &[String]) -> usize {
     let graph = graph(input);
 
     fn neighbors<'a>(graph: &'a Graph, node: &'a str) -> HashSet<&'a str> {
@@ -182,7 +182,7 @@ fn part_1(input: &Vec<String>) -> usize {
     neighbors(&graph, &"shiny gold").len()
 }
 
-fn part_2(input: &Vec<String>) -> usize {
+fn part_2(input: &[String]) -> usize {
     let graph = graph(input);
 
     fn sum_bag_counts<'a>(graph: &'a Graph, node: &'a str) -> usize {

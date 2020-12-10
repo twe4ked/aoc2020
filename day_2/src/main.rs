@@ -51,7 +51,7 @@
 // How many passwords are valid according to the new interpretation of the policies?
 
 fn main() {
-    let input = include_str!("../input")
+    let input: Vec<_> = include_str!("../input")
         .lines()
         .map(|l| l.to_owned())
         .collect();
@@ -87,10 +87,10 @@ impl Line {
     }
 }
 
-fn valid_passwords(input: &Vec<String>) -> usize {
+fn valid_passwords(input: &[String]) -> usize {
     input
         .iter()
-        .map(Line::parse)
+        .map(|s| Line::parse(s))
         .filter(|line| {
             let count = line.password.chars().filter(|c| c == &line.letter).count();
             (line.min..line.max + 1).contains(&count)
@@ -98,7 +98,7 @@ fn valid_passwords(input: &Vec<String>) -> usize {
         .count()
 }
 
-fn valid_passwords_part_2(input: &Vec<String>) -> usize {
+fn valid_passwords_part_2(input: &[String]) -> usize {
     input
         .iter()
         .map(Line::parse)
