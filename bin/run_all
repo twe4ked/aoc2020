@@ -1,0 +1,3 @@
+#!/bin/bash -e
+
+cargo run --bin 2>&1 | grep day | xargs -n 1 cargo run --bin
