@@ -63,6 +63,44 @@
 // The first step of attacking the weakness in the XMAS data is to find the first number in the
 // list (after the preamble) which is not the sum of two of the 25 numbers before it. What is the
 // first number that does not have this property?
+//
+// --- Part Two ---
+//
+// The final step in breaking the XMAS encryption relies on the invalid number you just found: you
+// must find a contiguous set of at least two numbers in your list which sum to the invalid number
+// from step 1.
+//
+// Again consider the above example:
+//
+// 35
+// 20
+// 15
+// 25
+// 47
+// 40
+// 62
+// 55
+// 65
+// 95
+// 102
+// 117
+// 150
+// 182
+// 127
+// 219
+// 299
+// 277
+// 309
+// 576
+//
+// In this list, adding up all of the numbers from 15 through 40 produces the invalid number from
+// step 1, 127. (Of course, the contiguous set of numbers in your actual list might be much
+// longer.)
+//
+// To find the encryption weakness, add together the smallest and largest number in this contiguous
+// range; in this example, these are 15 and 47, producing 62.
+//
+// What is the encryption weakness in your XMAS-encrypted list of numbers?
 
 fn main() {
     let input = include_str!("../input");
@@ -70,20 +108,31 @@ fn main() {
     let part_1 = part_1(&input, 25);
     assert_eq!(part_1, 177777905);
     println!("Part 1: {}", part_1);
+
+    let part_2 = part_2(&input, 25);
+    assert_eq!(part_2, 23463012);
+    println!("Part 2: {}", part_2);
+}
+
+fn parse(input: &str) -> Vec<usize> {
+    input.lines().map(|n| n.parse::<usize>().unwrap()).collect()
 }
 
 fn part_1(input: &str, preamble_len: usize) -> usize {
-    let input: Vec<usize> = input.lines().map(|n| n.parse::<usize>().unwrap()).collect();
+    let input = parse(input);
+    invalid_number(&input, preamble_len)
+}
 
+fn invalid_number(input: &[usize], preamble_len: usize) -> usize {
     *input
         .iter()
         .skip(preamble_len + 1)
         .enumerate()
         .find(|(i, n)| {
-            for x in input[*i..].into_iter() {
-                for y in input[*i..].into_iter() {
+            for x in input.into_iter().skip(*i) {
+                for y in input.into_iter().skip(*i) {
                     if x + y == **n {
-                        // If we find a matching sum, we continue searching
+                        // If we find a matching sum, we continue searching for an invalid number
                         return false;
                     }
                 }
@@ -93,6 +142,35 @@ fn part_1(input: &str, preamble_len: usize) -> usize {
         })
         .unwrap()
         .1
+}
+
+fn part_2(input: &str, preamble_len: usize) -> usize {
+    let input = parse(input);
+    let invalid_number = invalid_number(&input, preamble_len);
+
+    for i in 0..input.len() {
+        let mut acc = 0;
+
+        let mut j = i;
+        loop {
+            acc += input[j];
+
+            if acc == invalid_number {
+                // When we find the invalid number, find the min and max values from the range and
+                // add return the sum.
+                let mut range = input[i..j].to_vec();
+                range.sort_unstable();
+                return range.first().unwrap() + range.last().unwrap();
+            } else if acc > invalid_number {
+                // If we go past the invalid number, break and try again on the next iteration
+                break;
+            }
+
+            j += 1;
+        }
+    }
+
+    panic!("No matching range of numbers");
 }
 
 #[cfg(test)]
@@ -123,5 +201,6 @@ mod tests {
 576";
 
         assert_eq!(part_1(&input, 5), 127);
+        assert_eq!(part_2(&input, 5), 62);
     }
 }
