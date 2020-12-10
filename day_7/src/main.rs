@@ -91,11 +91,43 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-use petgraph::graphmap::DiGraphMap;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
-fn graph<'a>(input: &'a Vec<String>) -> DiGraphMap<&'a str, usize> {
-    let mut graph: DiGraphMap<&str, usize> = Default::default();
+struct Graph<'a> {
+    graph: HashMap<&'a str, HashMap<&'a str, usize>>,
+}
+
+impl<'a> Graph<'a> {
+    fn new() -> Self {
+        Self {
+            graph: HashMap::new(),
+        }
+    }
+
+    fn add_edge(&mut self, from: &'a str, to: &'a str, weight: usize) {
+        self.graph
+            .entry(from)
+            .or_insert(HashMap::new())
+            .insert(to, weight);
+    }
+
+    fn find_incoming(&self, id: &'a str) -> Vec<&'a str> {
+        self.graph
+            .iter()
+            .filter_map(|(outter_id, inner_map)| inner_map.get(id).map(|_| *outter_id))
+            .collect()
+    }
+
+    fn find_outgoing(&self, id: &str) -> Vec<(&'a str, usize)> {
+        self.graph
+            .get(id)
+            .map(|hash| hash.iter().map(|(id, weight)| (*id, *weight)).collect())
+            .unwrap_or(Vec::new())
+    }
+}
+
+fn graph<'a>(input: &'a Vec<String>) -> Graph<'a> {
+    let mut graph = Graph::new();
 
     for line in input {
         let mut iter = line.split(" bags contain ");
@@ -128,20 +160,16 @@ fn graph<'a>(input: &'a Vec<String>) -> DiGraphMap<&'a str, usize> {
         }
     }
 
-    // {
-    //     use petgraph::dot::{Config, Dot};
-    //     println!("{:?}", Dot::with_config(&graph, &[Config::EdgeNoLabel]));
-    // }
-
     graph
 }
 
 fn part_1(input: &Vec<String>) -> usize {
     let graph = graph(input);
 
-    fn neighbors<'a>(graph: &DiGraphMap<&'a str, usize>, node: &'a str) -> HashSet<&'a str> {
+    fn neighbors<'a>(graph: &'a Graph, node: &'a str) -> HashSet<&'a str> {
         graph
-            .neighbors_directed(node, petgraph::Direction::Incoming)
+            .find_incoming(node)
+            .iter()
             .map(|n| {
                 let mut x = neighbors(graph, n);
                 x.insert(n);
@@ -157,16 +185,11 @@ fn part_1(input: &Vec<String>) -> usize {
 fn part_2(input: &Vec<String>) -> usize {
     let graph = graph(input);
 
-    fn sum_bag_counts<'a>(graph: &DiGraphMap<&'a str, usize>, node: &'a str) -> usize {
-        let incoming = graph.neighbors_directed(node, petgraph::Direction::Outgoing);
-
-        incoming
-            .map(|n| {
-                let count = *graph.edge_weight(node, n).unwrap();
-                let inner_bags_count = sum_bag_counts(graph, n);
-
-                count + (count * inner_bags_count)
-            })
+    fn sum_bag_counts<'a>(graph: &'a Graph, node: &'a str) -> usize {
+        graph
+            .find_outgoing(node)
+            .iter()
+            .map(|(n, count)| count + (count * sum_bag_counts(graph, n)))
             .sum::<usize>()
     }
 
