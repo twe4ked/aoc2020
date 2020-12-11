@@ -190,7 +190,7 @@ fn main() {
     println!("Part 1: {}", part_1);
 
     let part_2 = part_2(&input);
-    assert_eq!(part_2, 1);
+    assert_eq!(part_2, 9256148959232);
     println!("Part 2: {}", part_2);
 }
 
@@ -219,40 +219,54 @@ fn part_1(input: &[usize]) -> usize {
     one * thr
 }
 
-fn valid_arrangements(input: &[usize], current_joltage: usize) -> usize {
+use std::collections::HashMap;
+
+fn valid_arrangements(
+    mut cache: &mut HashMap<(usize, usize), usize>,
+    input: &[usize],
+    current_joltage: usize,
+) -> usize {
     // Work out if the current arrangement is valid
     let next_adaptor_joltage = input[0];
 
-    // If we're at the bottom (found joltage 0) we return a 1, representing 1 valid arrangement
-    let bottom = if next_adaptor_joltage == 0 { 1 } else { 0 };
-
-    let current_level_count = if current_joltage - 1 == next_adaptor_joltage {
-        bottom
-    } else if current_joltage - 2 == next_adaptor_joltage {
-        bottom
-    } else if current_joltage - 3 == next_adaptor_joltage {
-        bottom
+    if let Some(c) = cache.get(&(current_joltage, next_adaptor_joltage)) {
+        *c
     } else {
-        // No more valid arrangements, return up
-        return 0;
-    };
+        // If we're at the bottom (found joltage 0) we return a 1, representing 1 valid arrangement
+        let bottom = if next_adaptor_joltage == 0 { 1 } else { 0 };
 
-    // Call again to get the valid arrangements for the levels 1, 2, and 3 down
-    let level_down_counts = match input.len() {
-        x if x > 3 => {
-            valid_arrangements(&input[1..], next_adaptor_joltage)
-                + valid_arrangements(&input[2..], next_adaptor_joltage)
-                + valid_arrangements(&input[3..], next_adaptor_joltage)
-        }
-        x if x > 2 => {
-            valid_arrangements(&input[1..], next_adaptor_joltage)
-                + valid_arrangements(&input[2..], next_adaptor_joltage)
-        }
-        x if x > 1 => valid_arrangements(&input[1..], next_adaptor_joltage),
-        _ => 0,
-    };
+        let current_level_count = if current_joltage - 1 == next_adaptor_joltage {
+            bottom
+        } else if current_joltage - 2 == next_adaptor_joltage {
+            bottom
+        } else if current_joltage - 3 == next_adaptor_joltage {
+            bottom
+        } else {
+            // No more valid arrangements, return up
+            cache.insert((current_joltage, next_adaptor_joltage), 0);
+            return 0;
+        };
 
-    current_level_count + level_down_counts
+        // Call again to get the valid arrangements for the levels 1, 2, and 3 down
+        let level_down_counts = match input.len() {
+            x if x > 3 => {
+                valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage)
+                    + valid_arrangements(&mut cache, &input[2..], next_adaptor_joltage)
+                    + valid_arrangements(&mut cache, &input[3..], next_adaptor_joltage)
+            }
+            x if x > 2 => {
+                valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage)
+                    + valid_arrangements(&mut cache, &input[2..], next_adaptor_joltage)
+            }
+            x if x > 1 => valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage),
+            _ => 0,
+        };
+
+        let c = current_level_count + level_down_counts;
+
+        cache.insert((current_joltage, next_adaptor_joltage), c);
+        c
+    }
 }
 
 fn part_2(input: &[usize]) -> usize {
@@ -264,7 +278,8 @@ fn part_2(input: &[usize]) -> usize {
     input = input.into_iter().rev().collect();
     input.push(0);
 
-    valid_arrangements(&input, device_joltage)
+    let mut cache = HashMap::new();
+    valid_arrangements(&mut cache, &input, device_joltage)
 }
 
 #[cfg(test)]
