@@ -167,7 +167,7 @@ impl Ship {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy)]
 enum Direction {
     N,
     S,
@@ -194,12 +194,34 @@ impl Direction {
         }
     }
 
+    fn iter(&self) -> DirectionIter {
+        DirectionIter(*self)
+    }
+
     fn right(&self, degrees: usize) -> Self {
-        (0..).take(degrees / 90).fold(self.clone(), |d, _| d.next())
+        self.iter().take(degrees / 90).last().unwrap()
     }
 
     fn left(&self, degrees: usize) -> Self {
-        (0..).take(degrees / 90).fold(self.clone(), |d, _| d.prev())
+        self.iter().rev().take(degrees / 90).last().unwrap()
+    }
+}
+
+struct DirectionIter(Direction);
+
+impl Iterator for DirectionIter {
+    type Item = Direction;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.0 = self.0.next();
+        Some(self.0)
+    }
+}
+
+impl DoubleEndedIterator for DirectionIter {
+    fn next_back(&mut self) -> Option<Self::Item> {
+        self.0 = self.0.prev();
+        Some(self.0)
     }
 }
 
