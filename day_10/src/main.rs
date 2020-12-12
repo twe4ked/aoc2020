@@ -179,6 +179,9 @@
 // What is the total number of distinct ways you can arrange the adapters to connect the charging
 // outlet to your device?
 
+use graph::Graph;
+use std::collections::HashMap;
+
 fn main() {
     let input: Vec<_> = include_str!("../input")
         .lines()
@@ -194,19 +197,27 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-fn part_1(input: &[usize]) -> usize {
+fn prepare(input: &[usize]) -> (usize, usize, Vec<usize>) {
     let mut input = input.to_vec();
     input.sort_unstable();
 
     let device_joltage = input.last().unwrap() + 3;
-
     input.push(device_joltage);
+
+    let starting_joltage = 0;
+    input.insert(0, starting_joltage);
+
+    (starting_joltage, device_joltage, input)
+}
+
+fn part_1(input: &[usize]) -> usize {
+    let (starting_joltage, _device_joltage, input) = prepare(&input);
 
     let mut one = 0;
     let mut thr = 0;
 
-    let mut last = 0;
-    for n in input {
+    let mut last = starting_joltage;
+    for n in input.into_iter().skip(1) {
         match n - last {
             1 => one += 1,
             2 => {}
@@ -250,20 +261,10 @@ mod graph {
 }
 
 fn part_2(input: &[usize]) -> usize {
-    use graph::Graph;
-    use std::collections::HashMap;
+    let (starting_joltage, device_joltage, input) = prepare(&input);
 
-    let mut input = input.to_vec();
-    input.sort_unstable();
-
-    let device_joltage = input.last().unwrap() + 3;
-    input.push(device_joltage);
-
-    let starting_joltage = 0;
-    input.insert(0, starting_joltage);
-
+    // Build up a directed directed acyclic graph (DAG)
     let mut graph = Graph::new();
-
     for x in input.clone() {
         for y in input.clone() {
             if x.wrapping_sub(y) <= 3 && x != y {
@@ -272,29 +273,30 @@ fn part_2(input: &[usize]) -> usize {
         }
     }
 
-    fn count(
-        cache: &mut HashMap<(usize, usize), usize>,
-        graph: &Graph,
-        from: usize,
-        to: usize,
-    ) -> usize {
-        if let Some(c) = cache.get(&(from, to)) {
-            *c
-        } else {
-            let c = graph.find_outgoing(from).iter().fold(0, |acc, n| {
-                acc + if *n == to {
-                    1
-                } else {
-                    count(cache, graph, *n, to)
-                }
-            });
-            cache.insert((from, to), c);
-            c
-        }
-    }
-
+    // Recursively count paths from starting to device joltage using a cache
     let mut cache = HashMap::new();
-    count(&mut cache, &graph, starting_joltage, device_joltage)
+    count_paths(&mut cache, &graph, starting_joltage, device_joltage)
+}
+
+fn count_paths(
+    cache: &mut HashMap<(usize, usize), usize>,
+    graph: &Graph,
+    from: usize,
+    to: usize,
+) -> usize {
+    if let Some(c) = cache.get(&(from, to)) {
+        *c
+    } else {
+        let c = graph.find_outgoing(from).iter().fold(0, |acc, n| {
+            acc + if *n == to {
+                1
+            } else {
+                count_paths(cache, graph, *n, to)
+            }
+        });
+        cache.insert((from, to), c);
+        c
+    }
 }
 
 #[cfg(test)]
