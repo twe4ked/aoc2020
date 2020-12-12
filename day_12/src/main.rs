@@ -63,28 +63,52 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
+struct Ship {
+    x: isize,
+    y: isize,
+    direction: Direction,
+}
+
+impl Ship {
+    fn new() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            direction: Direction::E,
+        }
+    }
+
+    fn manhattan_distance(&self) -> usize {
+        (self.x.abs() + self.y.abs()).try_into().unwrap()
+    }
+}
+
 fn part_1(input: &str) -> usize {
     let actions = parse(input);
 
-    let (x, y, _direction) = actions.iter().fold(
-        (0, 0, Direction::E),
-        |(x, y, direction), action| match action {
-            Action::MoveNorth(amount) => (x, y - amount, direction),
-            Action::MoveSouth(amount) => (x, y + amount, direction),
-            Action::MoveEast(amount) => (x + amount, y, direction),
-            Action::MoveWest(amount) => (x - amount, y, direction),
-            Action::TurnLeft(degrees) => (x, y, direction.left(*degrees)),
-            Action::TurnRight(degrees) => (x, y, direction.right(*degrees)),
-            Action::MoveForward(amount) => match direction {
-                Direction::N => (x, y - amount, direction),
-                Direction::E => (x + amount, y, direction),
-                Direction::S => (x, y + amount, direction),
-                Direction::W => (x - amount, y, direction),
-            },
-        },
-    );
+    actions
+        .iter()
+        .fold(Ship::new(), |ship, action| {
+            let Ship { x, y, direction } = ship;
 
-    (x.abs() + y.abs()).try_into().unwrap()
+            let (x, y, direction) = match action {
+                Action::MoveNorth(amount) => (x, y - amount, direction),
+                Action::MoveSouth(amount) => (x, y + amount, direction),
+                Action::MoveEast(amount) => (x + amount, y, direction),
+                Action::MoveWest(amount) => (x - amount, y, direction),
+                Action::TurnLeft(degrees) => (x, y, direction.left(*degrees)),
+                Action::TurnRight(degrees) => (x, y, direction.right(*degrees)),
+                Action::MoveForward(amount) => match direction {
+                    Direction::N => (x, y - amount, direction),
+                    Direction::E => (x + amount, y, direction),
+                    Direction::S => (x, y + amount, direction),
+                    Direction::W => (x - amount, y, direction),
+                },
+            };
+
+            Ship { x, y, direction }
+        })
+        .manhattan_distance()
 }
 
 fn part_2(_input: &str) -> usize {
