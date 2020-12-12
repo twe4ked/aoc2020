@@ -219,67 +219,82 @@ fn part_1(input: &[usize]) -> usize {
     one * thr
 }
 
-use std::collections::HashMap;
+mod graph {
+    use std::collections::{HashMap, HashSet};
 
-fn valid_arrangements(
-    mut cache: &mut HashMap<(usize, usize), usize>,
-    input: &[usize],
-    current_joltage: usize,
-) -> usize {
-    // Work out if the current arrangement is valid
-    let next_adaptor_joltage = input[0];
+    pub struct Graph {
+        graph: HashMap<usize, HashSet<usize>>,
+    }
 
-    if let Some(c) = cache.get(&(current_joltage, next_adaptor_joltage)) {
-        *c
-    } else {
-        // If we're at the bottom (found joltage 0) we return a 1, representing 1 valid arrangement
-        let bottom = if next_adaptor_joltage == 0 { 1 } else { 0 };
-
-        let current_level_count = if current_joltage - 1 == next_adaptor_joltage {
-            bottom
-        } else if current_joltage - 2 == next_adaptor_joltage {
-            bottom
-        } else if current_joltage - 3 == next_adaptor_joltage {
-            bottom
-        } else {
-            // No more valid arrangements, return up
-            cache.insert((current_joltage, next_adaptor_joltage), 0);
-            return 0;
-        };
-
-        // Call again to get the valid arrangements for the levels 1, 2, and 3 down
-        let level_down_counts = match input.len() {
-            x if x > 3 => {
-                valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage)
-                    + valid_arrangements(&mut cache, &input[2..], next_adaptor_joltage)
-                    + valid_arrangements(&mut cache, &input[3..], next_adaptor_joltage)
+    impl Graph {
+        pub fn new() -> Self {
+            Self {
+                graph: HashMap::new(),
             }
-            x if x > 2 => {
-                valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage)
-                    + valid_arrangements(&mut cache, &input[2..], next_adaptor_joltage)
-            }
-            x if x > 1 => valid_arrangements(&mut cache, &input[1..], next_adaptor_joltage),
-            _ => 0,
-        };
+        }
 
-        let c = current_level_count + level_down_counts;
+        pub fn add_edge(&mut self, from: usize, to: usize) {
+            self.graph
+                .entry(from)
+                .or_insert_with(HashSet::new)
+                .insert(to);
+        }
 
-        cache.insert((current_joltage, next_adaptor_joltage), c);
-        c
+        pub fn find_outgoing(&self, id: usize) -> Vec<usize> {
+            self.graph
+                .get(&id)
+                .map(|set| (*set).iter().map(|s| *s).collect())
+                .unwrap_or_default()
+        }
     }
 }
 
 fn part_2(input: &[usize]) -> usize {
+    use graph::Graph;
+    use std::collections::HashMap;
+
     let mut input = input.to_vec();
     input.sort_unstable();
 
     let device_joltage = input.last().unwrap() + 3;
+    input.push(device_joltage);
 
-    input = input.into_iter().rev().collect();
-    input.push(0);
+    let starting_joltage = 0;
+    input.insert(0, starting_joltage);
+
+    let mut graph = Graph::new();
+
+    for x in input.clone() {
+        for y in input.clone() {
+            if x.wrapping_sub(y) <= 3 && x != y {
+                graph.add_edge(y, x);
+            }
+        }
+    }
+
+    fn count(
+        cache: &mut HashMap<(usize, usize), usize>,
+        graph: &Graph,
+        from: usize,
+        to: usize,
+    ) -> usize {
+        if let Some(c) = cache.get(&(from, to)) {
+            *c
+        } else {
+            let c = graph.find_outgoing(from).iter().fold(0, |acc, n| {
+                acc + if *n == to {
+                    1
+                } else {
+                    count(cache, graph, *n, to)
+                }
+            });
+            cache.insert((from, to), c);
+            c
+        }
+    }
 
     let mut cache = HashMap::new();
-    valid_arrangements(&mut cache, &input, device_joltage)
+    count(&mut cache, &graph, starting_joltage, device_joltage)
 }
 
 #[cfg(test)]
