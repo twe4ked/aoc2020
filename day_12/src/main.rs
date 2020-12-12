@@ -59,10 +59,41 @@ fn main() {
     println!("Part 1: {}", part_1);
 
     let part_2 = part_2(&input);
-    assert_eq!(part_2, 99);
+    assert_eq!(part_2, 62434);
     println!("Part 2: {}", part_2);
 }
 
+#[derive(Debug)]
+struct Waypoint {
+    x: isize,
+    y: isize,
+}
+
+impl Waypoint {
+    fn new(x: isize, y: isize) -> Self {
+        Self { x, y }
+    }
+
+    fn right(&mut self, degrees: usize) {
+        let (x, y) = (0..)
+            .take(degrees / 90)
+            .fold((self.x, self.y), |(x, y), _| (-y, x));
+
+        self.x = x;
+        self.y = y;
+    }
+
+    fn left(&mut self, degrees: usize) {
+        let (x, y) = (0..)
+            .take(degrees / 90)
+            .fold((self.x, self.y), |(x, y), _| (y, -x));
+
+        self.x = x;
+        self.y = y;
+    }
+}
+
+#[derive(Debug)]
 struct Ship {
     x: isize,
     y: isize,
@@ -111,11 +142,32 @@ fn part_1(input: &str) -> usize {
         .manhattan_distance()
 }
 
-fn part_2(_input: &str) -> usize {
-    99
+fn part_2(input: &str) -> usize {
+    let actions = parse(input);
+
+    // 10 units east and 1 unit north
+    let mut waypoint = Waypoint::new(10, -1);
+    let mut ship = Ship::new();
+
+    for action in actions {
+        match action {
+            Action::MoveNorth(amount) => waypoint.y = waypoint.y - amount,
+            Action::MoveSouth(amount) => waypoint.y = waypoint.y + amount,
+            Action::MoveEast(amount) => waypoint.x = waypoint.x + amount,
+            Action::MoveWest(amount) => waypoint.x = waypoint.x - amount,
+            Action::TurnLeft(degrees) => waypoint.left(degrees),
+            Action::TurnRight(degrees) => waypoint.right(degrees),
+            Action::MoveForward(amount) => {
+                ship.x = ship.x + (amount * waypoint.x);
+                ship.y = ship.y + (amount * waypoint.y);
+            }
+        }
+    }
+
+    ship.manhattan_distance()
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 enum Direction {
     N,
     S,
@@ -124,7 +176,7 @@ enum Direction {
 }
 
 impl Direction {
-    fn prev(self) -> Self {
+    fn prev(&self) -> Self {
         match self {
             Direction::N => Direction::W,
             Direction::W => Direction::S,
@@ -133,7 +185,7 @@ impl Direction {
         }
     }
 
-    fn next(self) -> Self {
+    fn next(&self) -> Self {
         match self {
             Direction::N => Direction::E,
             Direction::E => Direction::S,
@@ -142,15 +194,16 @@ impl Direction {
         }
     }
 
-    fn right(self, degrees: usize) -> Self {
-        (0..).take(degrees / 90).fold(self, |d, _| d.next())
+    fn right(&self, degrees: usize) -> Self {
+        (0..).take(degrees / 90).fold(self.clone(), |d, _| d.next())
     }
 
-    fn left(self, degrees: usize) -> Self {
-        (0..).take(degrees / 90).fold(self, |d, _| d.prev())
+    fn left(&self, degrees: usize) -> Self {
+        (0..).take(degrees / 90).fold(self.clone(), |d, _| d.prev())
     }
 }
 
+#[derive(Debug)]
 enum Action {
     MoveNorth(isize),
     MoveSouth(isize),
