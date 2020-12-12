@@ -63,57 +63,6 @@ fn main() {
     println!("Part 2: {}", part_2);
 }
 
-#[derive(Debug)]
-struct Waypoint {
-    x: isize,
-    y: isize,
-}
-
-impl Waypoint {
-    fn new(x: isize, y: isize) -> Self {
-        Self { x, y }
-    }
-
-    fn right(&mut self, degrees: usize) {
-        let (x, y) = (0..)
-            .take(degrees / 90)
-            .fold((self.x, self.y), |(x, y), _| (-y, x));
-
-        self.x = x;
-        self.y = y;
-    }
-
-    fn left(&mut self, degrees: usize) {
-        let (x, y) = (0..)
-            .take(degrees / 90)
-            .fold((self.x, self.y), |(x, y), _| (y, -x));
-
-        self.x = x;
-        self.y = y;
-    }
-}
-
-#[derive(Debug)]
-struct Ship {
-    x: isize,
-    y: isize,
-    direction: Direction,
-}
-
-impl Ship {
-    fn new() -> Self {
-        Self {
-            x: 0,
-            y: 0,
-            direction: Direction::E,
-        }
-    }
-
-    fn manhattan_distance(&self) -> usize {
-        (self.x.abs() + self.y.abs()).try_into().unwrap()
-    }
-}
-
 fn part_1(input: &str) -> usize {
     let actions = parse(input);
 
@@ -165,6 +114,57 @@ fn part_2(input: &str) -> usize {
     }
 
     ship.manhattan_distance()
+}
+
+#[derive(Debug)]
+struct Waypoint {
+    x: isize,
+    y: isize,
+}
+
+impl Waypoint {
+    fn new(x: isize, y: isize) -> Self {
+        Self { x, y }
+    }
+
+    fn right(&mut self, degrees: usize) {
+        let (x, y) = (0..)
+            .take(degrees / 90)
+            .fold((self.x, self.y), |(x, y), _| (-y, x));
+
+        self.x = x;
+        self.y = y;
+    }
+
+    fn left(&mut self, degrees: usize) {
+        let (x, y) = (0..)
+            .take(degrees / 90)
+            .fold((self.x, self.y), |(x, y), _| (y, -x));
+
+        self.x = x;
+        self.y = y;
+    }
+}
+
+#[derive(Debug)]
+struct Ship {
+    x: isize,
+    y: isize,
+    direction: Direction,
+}
+
+impl Ship {
+    fn new() -> Self {
+        Self {
+            x: 0,
+            y: 0,
+            direction: Direction::E,
+        }
+    }
+
+    fn manhattan_distance(&self) -> usize {
+        (self.x.abs() + self.y.abs()).try_into().unwrap()
+    }
 }
 
 #[derive(Debug, Clone)]
