@@ -179,24 +179,6 @@ enum Direction {
 }
 
 impl Direction {
-    fn prev(&self) -> Self {
-        match self {
-            Direction::N => Direction::W,
-            Direction::W => Direction::S,
-            Direction::S => Direction::E,
-            Direction::E => Direction::N,
-        }
-    }
-
-    fn next(&self) -> Self {
-        match self {
-            Direction::N => Direction::E,
-            Direction::E => Direction::S,
-            Direction::S => Direction::W,
-            Direction::W => Direction::N,
-        }
-    }
-
     fn iter(&self) -> DirectionIter {
         DirectionIter(*self)
     }
@@ -216,14 +198,26 @@ impl Iterator for DirectionIter {
     type Item = Direction;
 
     fn next(&mut self) -> Option<Self::Item> {
-        self.0 = self.0.next();
+        self.0 = match self.0 {
+            Direction::N => Direction::E,
+            Direction::E => Direction::S,
+            Direction::S => Direction::W,
+            Direction::W => Direction::N,
+        };
+
         Some(self.0)
     }
 }
 
 impl DoubleEndedIterator for DirectionIter {
     fn next_back(&mut self) -> Option<Self::Item> {
-        self.0 = self.0.prev();
+        self.0 = match self.0 {
+            Direction::N => Direction::W,
+            Direction::W => Direction::S,
+            Direction::S => Direction::E,
+            Direction::E => Direction::N,
+        };
+
         Some(self.0)
     }
 }
