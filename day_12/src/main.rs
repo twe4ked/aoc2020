@@ -118,40 +118,38 @@ struct Ship {
     direction: Direction,
 }
 
-fn handle_action(ship: Ship, action: &Action) -> Ship {
-    let Ship { x, y, direction } = ship;
-
-    let (x, y, direction) = match action {
-        Action::MoveNorth(amount) => (x, y - amount, direction),
-        Action::MoveSouth(amount) => (x, y + amount, direction),
-        Action::MoveEast(amount) => (x + amount, y, direction),
-        Action::MoveWest(amount) => (x - amount, y, direction),
-        Action::TurnLeft(degrees) => (x, y, direction.left(*degrees)),
-        Action::TurnRight(degrees) => (x, y, direction.right(*degrees)),
-        Action::MoveForward(amount) => match direction {
-            Direction::N => (x, y - amount, direction),
-            Direction::E => (x + amount, y, direction),
-            Direction::S => (x, y + amount, direction),
-            Direction::W => (x - amount, y, direction),
+fn handle_action(mut ship: Ship, action: &Action) -> Ship {
+    match action {
+        Action::MoveNorth(amount) => ship.y -= amount,
+        Action::MoveSouth(amount) => ship.y += amount,
+        Action::MoveEast(amount) => ship.x += amount,
+        Action::MoveWest(amount) => ship.x -= amount,
+        Action::TurnLeft(degrees) => ship.direction.left(*degrees),
+        Action::TurnRight(degrees) => ship.direction.right(*degrees),
+        Action::MoveForward(amount) => match ship.direction {
+            Direction::N => ship.y -= amount,
+            Direction::E => ship.x += amount,
+            Direction::S => ship.y += amount,
+            Direction::W => ship.x -= amount,
         },
-    };
+    }
 
-    Ship { x, y, direction }
+    ship
 }
 
 fn handle_action_with_waypoint(input: (Ship, Waypoint), action: &Action) -> (Ship, Waypoint) {
     let (mut ship, mut waypoint) = input;
 
     match action {
-        Action::MoveNorth(amount) => waypoint.y = waypoint.y - amount,
-        Action::MoveSouth(amount) => waypoint.y = waypoint.y + amount,
-        Action::MoveEast(amount) => waypoint.x = waypoint.x + amount,
-        Action::MoveWest(amount) => waypoint.x = waypoint.x - amount,
+        Action::MoveNorth(amount) => waypoint.y -= amount,
+        Action::MoveSouth(amount) => waypoint.y += amount,
+        Action::MoveEast(amount) => waypoint.x += amount,
+        Action::MoveWest(amount) => waypoint.x -= amount,
         Action::TurnLeft(degrees) => waypoint.left(*degrees),
         Action::TurnRight(degrees) => waypoint.right(*degrees),
         Action::MoveForward(amount) => {
-            ship.x = ship.x + (amount * waypoint.x);
-            ship.y = ship.y + (amount * waypoint.y);
+            ship.x += amount * waypoint.x;
+            ship.y += amount * waypoint.y;
         }
     }
 
@@ -203,12 +201,12 @@ impl Direction {
         DirectionIter(*self)
     }
 
-    fn right(&self, degrees: usize) -> Self {
-        self.iter().take(degrees / 90).last().unwrap()
+    fn right(&mut self, degrees: usize) {
+        *self = self.iter().take(degrees / 90).last().unwrap();
     }
 
-    fn left(&self, degrees: usize) -> Self {
-        self.iter().rev().take(degrees / 90).last().unwrap()
+    fn left(&mut self, degrees: usize) {
+        *self = self.iter().rev().take(degrees / 90).last().unwrap();
     }
 }
 
