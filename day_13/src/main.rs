@@ -189,16 +189,16 @@ fn next_service(earliest_departure: usize, services: &[usize]) -> (usize, usize)
         (n, departure.unwrap())
     });
 
-    let mut next_service = usize::MAX;
-    let mut next_timestamp = usize::MAX;
-    for (service, timestamp) in next_departures {
-        if timestamp < next_timestamp {
-            next_service = *service;
-            next_timestamp = timestamp;
-        }
-    }
-
-    (next_service, next_timestamp)
+    next_departures.fold(
+        (usize::MAX, usize::MAX),
+        |(next_service, next_timestamp), (service, timestamp)| {
+            if timestamp < next_timestamp {
+                (*service, timestamp)
+            } else {
+                (next_service, next_timestamp)
+            }
+        },
+    )
 }
 
 #[cfg(test)]
