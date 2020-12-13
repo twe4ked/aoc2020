@@ -64,54 +64,19 @@ fn main() {
 }
 
 fn part_1(input: &str) -> usize {
-    let actions = parse(input);
-
-    actions
+    parse(input)
         .iter()
-        .fold(Ship::new(), |ship, action| {
-            let Ship { x, y, direction } = ship;
-
-            let (x, y, direction) = match action {
-                Action::MoveNorth(amount) => (x, y - amount, direction),
-                Action::MoveSouth(amount) => (x, y + amount, direction),
-                Action::MoveEast(amount) => (x + amount, y, direction),
-                Action::MoveWest(amount) => (x - amount, y, direction),
-                Action::TurnLeft(degrees) => (x, y, direction.left(*degrees)),
-                Action::TurnRight(degrees) => (x, y, direction.right(*degrees)),
-                Action::MoveForward(amount) => match direction {
-                    Direction::N => (x, y - amount, direction),
-                    Direction::E => (x + amount, y, direction),
-                    Direction::S => (x, y + amount, direction),
-                    Direction::W => (x - amount, y, direction),
-                },
-            };
-
-            Ship { x, y, direction }
-        })
+        .fold(Ship::new(), handle_action)
         .manhattan_distance()
 }
 
 fn part_2(input: &str) -> usize {
-    let actions = parse(input);
-
     // 10 units east and 1 unit north
-    let mut waypoint = Waypoint::new(10, -1);
-    let mut ship = Ship::new();
+    let waypoint = Waypoint::new(10, -1);
 
-    for action in actions {
-        match action {
-            Action::MoveNorth(amount) => waypoint.y = waypoint.y - amount,
-            Action::MoveSouth(amount) => waypoint.y = waypoint.y + amount,
-            Action::MoveEast(amount) => waypoint.x = waypoint.x + amount,
-            Action::MoveWest(amount) => waypoint.x = waypoint.x - amount,
-            Action::TurnLeft(degrees) => waypoint.left(degrees),
-            Action::TurnRight(degrees) => waypoint.right(degrees),
-            Action::MoveForward(amount) => {
-                ship.x = ship.x + (amount * waypoint.x);
-                ship.y = ship.y + (amount * waypoint.y);
-            }
-        }
-    }
+    let (ship, _waypoint) = parse(input)
+        .iter()
+        .fold((Ship::new(), waypoint), handle_action_with_waypoint);
 
     ship.manhattan_distance()
 }
@@ -146,11 +111,51 @@ impl Waypoint {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 struct Ship {
     x: isize,
     y: isize,
     direction: Direction,
+}
+
+fn handle_action(ship: Ship, action: &Action) -> Ship {
+    let Ship { x, y, direction } = ship;
+
+    let (x, y, direction) = match action {
+        Action::MoveNorth(amount) => (x, y - amount, direction),
+        Action::MoveSouth(amount) => (x, y + amount, direction),
+        Action::MoveEast(amount) => (x + amount, y, direction),
+        Action::MoveWest(amount) => (x - amount, y, direction),
+        Action::TurnLeft(degrees) => (x, y, direction.left(*degrees)),
+        Action::TurnRight(degrees) => (x, y, direction.right(*degrees)),
+        Action::MoveForward(amount) => match direction {
+            Direction::N => (x, y - amount, direction),
+            Direction::E => (x + amount, y, direction),
+            Direction::S => (x, y + amount, direction),
+            Direction::W => (x - amount, y, direction),
+        },
+    };
+
+    Ship { x, y, direction }
+}
+
+fn handle_action_with_waypoint(input: (Ship, Waypoint), action: &Action) -> (Ship, Waypoint) {
+    let (mut ship, mut waypoint) = input;
+
+    match action {
+        Action::MoveNorth(amount) => waypoint.y = waypoint.y - amount,
+        Action::MoveSouth(amount) => waypoint.y = waypoint.y + amount,
+        Action::MoveEast(amount) => waypoint.x = waypoint.x + amount,
+        Action::MoveWest(amount) => waypoint.x = waypoint.x - amount,
+        Action::TurnLeft(degrees) => waypoint.left(*degrees),
+        Action::TurnRight(degrees) => waypoint.right(*degrees),
+        Action::MoveForward(amount) => {
+            ship.x = ship.x + (amount * waypoint.x);
+            ship.y = ship.y + (amount * waypoint.y);
+        }
+    }
+
+    (ship, waypoint)
 }
 
 impl Ship {
