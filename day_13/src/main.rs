@@ -176,29 +176,26 @@ fn parse_input(input: &str) -> (usize, Vec<usize>) {
 }
 
 fn next_service(earliest_departure: usize, services: &[usize]) -> (usize, usize) {
-    let next_departures = services.iter().map(|n| {
-        let departure = (1..).find_map(|i| {
-            let timestamp = i * n;
-            if timestamp > earliest_departure {
-                Some(timestamp)
-            } else {
-                None
-            }
-        });
+    services
+        .iter()
+        .map(|&service| {
+            // Find the first timestamp after the earliest departure
+            let timestamp = (1..)
+                .find_map(|i| {
+                    let timestamp = i * service;
+                    if timestamp > earliest_departure {
+                        Some(timestamp)
+                    } else {
+                        None
+                    }
+                })
+                .unwrap();
 
-        (n, departure.unwrap())
-    });
-
-    next_departures.fold(
-        (usize::MAX, usize::MAX),
-        |(next_service, next_timestamp), (service, timestamp)| {
-            if timestamp < next_timestamp {
-                (*service, timestamp)
-            } else {
-                (next_service, next_timestamp)
-            }
-        },
-    )
+            (service, timestamp)
+        })
+        // Find the earliest timestamp
+        .min_by_key(|x| x.1)
+        .unwrap()
 }
 
 #[cfg(test)]
