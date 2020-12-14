@@ -162,7 +162,22 @@ fn part_2(input: &str) -> usize {
 }
 
 fn part_2_inner(services: &[Service]) -> usize {
-    todo!()
+    let iter = services.iter().enumerate().filter_map(|(i, s)| match s {
+        Service::WithTime(t) => Some((i, *t)),
+        Service::AnyTime => None,
+    });
+
+    for t in 0.. {
+        // t = (s1 % t == 0 && s2 % t + offset == 0, ..)
+        if iter
+            .clone()
+            .all(|(offset, service)| (t + offset) % service == 0)
+        {
+            return t;
+        };
+    }
+
+    unreachable!()
 }
 
 #[derive(Debug, Clone, Copy)]
