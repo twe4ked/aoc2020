@@ -144,9 +144,9 @@ fn main() {
     assert_eq!(part_1, 115);
     println!("Part 1: {}", part_1);
 
-    // let part_2 = part_2(&input, 25);
-    // assert_eq!(part_2, 23463012);
-    // println!("Part 2: {}", part_2);
+    let part_2 = part_2(&input);
+    assert_eq!(part_2, 99);
+    println!("Part 2: {}", part_2);
 }
 
 fn part_1(input: &str) -> usize {
@@ -156,7 +156,22 @@ fn part_1(input: &str) -> usize {
     (next_departure - earliest_departure) * next_service
 }
 
-fn parse_input(input: &str) -> (usize, Vec<usize>) {
+fn part_2(input: &str) -> usize {
+    let (_earliest_departure, services) = parse_input(input);
+    part_2_inner(&services)
+}
+
+fn part_2_inner(services: &[Service]) -> usize {
+    todo!()
+}
+
+#[derive(Debug, Clone, Copy)]
+enum Service {
+    WithTime(usize),
+    AnyTime,
+}
+
+fn parse_input(input: &str) -> (usize, Vec<Service>) {
     let mut lines = input.lines();
 
     let earliest_departure = lines
@@ -169,29 +184,39 @@ fn parse_input(input: &str) -> (usize, Vec<usize>) {
         .next()
         .expect("no services found")
         .split(',')
-        .filter_map(|s| s.parse().ok())
+        .map(|s| {
+            s.parse()
+                .ok()
+                .map(|t| Service::WithTime(t))
+                .unwrap_or(Service::AnyTime)
+        })
         .collect();
 
     (earliest_departure, services)
 }
 
-fn next_service(earliest_departure: usize, services: &[usize]) -> (usize, usize) {
+fn next_service(earliest_departure: usize, services: &[Service]) -> (usize, usize) {
     services
         .iter()
-        .map(|&service| {
-            // Find the first timestamp after the earliest departure
-            let timestamp = (1..)
-                .find_map(|i| {
-                    let timestamp = i * service;
-                    if timestamp > earliest_departure {
-                        Some(timestamp)
-                    } else {
-                        None
-                    }
-                })
-                .unwrap();
+        .filter_map(|&service| {
+            match service {
+                Service::WithTime(service) => {
+                    // Find the first timestamp after the earliest departure
+                    let timestamp = (1..)
+                        .find_map(|i| {
+                            let timestamp = i * service;
+                            if timestamp > earliest_departure {
+                                Some(timestamp)
+                            } else {
+                                None
+                            }
+                        })
+                        .unwrap();
 
-            (service, timestamp)
+                    Some((service, timestamp))
+                }
+                Service::AnyTime => None,
+            }
         })
         // Find the earliest timestamp
         .min_by_key(|x| x.1)
@@ -202,11 +227,27 @@ fn next_service(earliest_departure: usize, services: &[usize]) -> (usize, usize)
 mod tests {
     use super::*;
 
+    fn services() -> Vec<Service> {
+        vec![
+            Service::WithTime(7),
+            Service::WithTime(13),
+            Service::AnyTime,
+            Service::AnyTime,
+            Service::WithTime(59),
+            Service::AnyTime,
+            Service::WithTime(31),
+            Service::WithTime(19),
+        ]
+    }
+
     #[test]
     fn readme_example_part_1() {
         let earliest_departure = 939;
-        let services = vec![7, 13, 59, 31, 19];
+        assert_eq!(next_service(earliest_departure, &services()), (59, 944));
+    }
 
-        assert_eq!(next_service(earliest_departure, &services), (59, 944));
+    #[test]
+    fn readme_example_part_2() {
+        assert_eq!(part_2_inner(&services()), 1068781);
     }
 }
