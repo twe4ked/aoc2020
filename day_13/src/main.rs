@@ -202,7 +202,7 @@ fn parse_input(input: &str) -> (usize, Vec<Service>) {
         .map(|s| {
             s.parse()
                 .ok()
-                .map(|t| Service::WithTime(t))
+                .map(Service::WithTime)
                 .unwrap_or(Service::AnyTime)
         })
         .collect();
