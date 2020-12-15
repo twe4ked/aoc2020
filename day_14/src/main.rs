@@ -71,19 +71,16 @@ fn create_bitmasks(mask: &str) -> (usize, usize) {
     let mut one_mask = 0;
 
     for c in mask.chars() {
+        zer_mask <<= 1;
+        one_mask <<= 1;
+
         match c {
-            'X' => {
-                zer_mask = zer_mask << 1 | 1;
-                one_mask = one_mask << 1 | 0;
-            }
-            '0' => {
-                zer_mask = zer_mask << 1 | 0;
-                one_mask = one_mask << 1 | 0;
-            }
+            'X' => zer_mask |= 1,
             '1' => {
-                zer_mask = zer_mask << 1 | 1;
-                one_mask = one_mask << 1 | 1;
+                zer_mask |= 1;
+                one_mask |= 1;
             }
+            '0' => {}
             _ => panic!("bad char"),
         }
     }
