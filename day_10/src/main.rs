@@ -179,9 +179,6 @@
 // What is the total number of distinct ways you can arrange the adapters to connect the charging
 // outlet to your device?
 
-use graph::Graph;
-use std::collections::HashMap;
-
 fn main() {
     let input: Vec<_> = include_str!("../input")
         .lines()
@@ -230,73 +227,52 @@ fn part_1(input: &[usize]) -> usize {
     one * thr
 }
 
-mod graph {
-    use std::collections::{HashMap, HashSet};
-
-    pub struct Graph {
-        graph: HashMap<usize, HashSet<usize>>,
-    }
-
-    impl Graph {
-        pub fn new() -> Self {
-            Self {
-                graph: HashMap::new(),
-            }
-        }
-
-        pub fn add_edge(&mut self, from: usize, to: usize) {
-            self.graph
-                .entry(from)
-                .or_insert_with(HashSet::new)
-                .insert(to);
-        }
-
-        pub fn find_outgoing(&self, id: usize) -> Vec<usize> {
-            self.graph
-                .get(&id)
-                .map(|set| (*set).iter().map(|s| *s).collect())
-                .unwrap_or_default()
-        }
-    }
-}
-
+// (0),1,4,5,6,7,10,11,12,15,16,19,(22)
+// 22 (end)
+// 19 -> 1 (only 1 path from 19 to end)
+// 16 -> 1 (16 can only reach 19, so still only 1 path)
+// 15 -> 1 (same)
+// 12 -> 1 (same)
+// 11 -> 1 (same)
+// 10 -> 1 + 1 = 2 (10 can reach 11 AND 12, one path each = 2)
+// 7 -> 2 (7 can only reach 10, so still 2)
+// 6 -> 2 (same)
+// 5 -> 2 + 2 = 4 (5 can go via 6 (2 paths) and 7 (2 paths) = 4)
+// 4 -> 4 + 2 + 2 = 8 (4 can go via 5 (4 paths), 6 (2 paths) and 7 (2 paths) = 8)
+// 1 -> 8 (1 can only reach 4, so still 8 paths)
+// 0 -> 8 (0 can only reach 1, so the answer is 8)
 fn part_2(input: &[usize]) -> usize {
-    let (starting_joltage, device_joltage, input) = prepare(&input);
+    use std::collections::HashMap;
 
-    // Build up a directed directed acyclic graph (DAG)
-    let mut graph = Graph::new();
-    for x in input.clone() {
-        for y in input.clone() {
-            if x.wrapping_sub(y) <= 3 && x != y {
-                graph.add_edge(y, x);
-            }
-        }
-    }
+    let (_starting_joltage, _device_joltage, input) = prepare(&input);
+    let adapters: Vec<_> = input.into_iter().rev().collect();
 
-    // Recursively count paths from starting to device joltage using a cache
-    let mut cache = HashMap::new();
-    count_paths(&mut cache, &graph, starting_joltage, device_joltage)
-}
+    let mut paths_from_adapter = HashMap::new();
 
-fn count_paths(
-    cache: &mut HashMap<(usize, usize), usize>,
-    graph: &Graph,
-    from: usize,
-    to: usize,
-) -> usize {
-    if let Some(c) = cache.get(&(from, to)) {
-        *c
-    } else {
-        let c = graph.find_outgoing(from).iter().fold(0, |acc, n| {
-            acc + if *n == to {
-                1
-            } else {
-                count_paths(cache, graph, *n, to)
-            }
-        });
-        cache.insert((from, to), c);
-        c
-    }
+    (1..adapters.len()).fold(0, |_acc, i| {
+        let current_adapter = adapters[i];
+
+        let count_paths = |offset| {
+            adapters
+                .get(i.wrapping_sub(offset))
+                .map(|adapter| {
+                    if adapter - current_adapter <= 3 {
+                        return paths_from_adapter.get(adapter).unwrap_or(&1);
+                    } else {
+                        &0
+                    }
+                })
+                .unwrap_or(&0)
+        };
+
+        // Count the paths from the previous 3 adapters
+        let paths = count_paths(1) + count_paths(2) + count_paths(3);
+
+        // Store how many paths for the current adapter
+        paths_from_adapter.insert(current_adapter, paths);
+
+        paths
+    })
 }
 
 #[cfg(test)]
