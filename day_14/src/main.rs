@@ -8,55 +8,62 @@ fn main() {
     println!("Part 1: {}", part_1);
 }
 
-fn part_1(lines: &[&str]) -> usize {
-    let apply_bitmasks = |value, zer_mask, one_mask| (value & zer_mask) | one_mask;
+#[derive(Default)]
+struct State {
+    zer_mask: usize,
+    one_mask: usize,
+    mem: HashMap<usize, usize>,
+}
 
-    let mut mem = HashMap::new();
-
-    let mut zer_mask = 0;
-    let mut one_mask = 0;
-
-    // mask = 0111X10100100X1111X10010X000X1000001
-    // mem[50907] = 468673978
-    // mem[22295] = 3337449
-    // mem[58474] = 56418393
-    // mem[15362] = 243184
-    // mem[65089] = 110688658
-    for line in lines {
-        match line.chars().nth(1).unwrap() {
-            // mask
-            //  ^
-            'a' => {
-                let bitmasks = create_bitmasks(line.split(" = ").nth(1).unwrap());
-                zer_mask = bitmasks.0;
-                one_mask = bitmasks.1;
-            }
-            // mem
-            //  ^
-            'e' => {
-                let parts = line.split('[').last().unwrap();
-                let mut parts = parts.split(']');
-
-                let index: usize = parts.next().unwrap().parse().unwrap();
-
-                let value: usize = parts
-                    .next()
-                    .unwrap()
-                    .split(" = ")
-                    .last()
-                    .unwrap()
-                    .parse()
-                    .unwrap();
-
-                let masked_value = apply_bitmasks(value, zer_mask, one_mask);
-
-                mem.insert(index, masked_value);
-            }
-            _ => panic!("bad line"),
-        }
+impl State {
+    fn apply_bitmasks(&self, value: usize) -> usize {
+        (value & self.zer_mask) | self.one_mask
     }
+}
 
-    mem.values().sum()
+fn part_1(lines: &[&str]) -> usize {
+    lines
+        .iter()
+        .fold(State::default(), |mut state, line| {
+            match line.chars().nth(1).unwrap() {
+                // mask
+                //  ^
+                'a' => {
+                    let (zer_mask, one_mask) = create_bitmasks(line.split(" = ").nth(1).unwrap());
+                    state.zer_mask = zer_mask;
+                    state.one_mask = one_mask;
+                }
+                // mem
+                //  ^
+                'e' => {
+                    let (index, value) = parse_mem_line(line);
+                    state.mem.insert(index, state.apply_bitmasks(value));
+                }
+                _ => panic!("bad line"),
+            }
+            state
+        })
+        .mem
+        .values()
+        .sum()
+}
+
+fn parse_mem_line(line: &&str) -> (usize, usize) {
+    let parts = line.split('[').last().unwrap();
+    let mut parts = parts.split(']');
+
+    let index = parts.next().unwrap().parse().unwrap();
+
+    let value = parts
+        .next()
+        .unwrap()
+        .split(" = ")
+        .last()
+        .unwrap()
+        .parse()
+        .unwrap();
+
+    (index, value)
 }
 
 fn create_bitmasks(mask: &str) -> (usize, usize) {
