@@ -22,30 +22,49 @@ impl State {
 }
 
 fn part_1(lines: &[&str]) -> usize {
-    lines
+    parse_lines(lines)
         .iter()
         .fold(State::default(), |mut state, line| {
-            match line.chars().nth(1).unwrap() {
-                // mask
-                //  ^
-                'a' => {
-                    let (zer_mask, one_mask) = create_bitmasks(line.split(" = ").nth(1).unwrap());
+            match line {
+                Line::Mask(mask) => {
+                    let (zer_mask, one_mask) = create_bitmasks(mask);
                     state.zer_mask = zer_mask;
                     state.one_mask = one_mask;
                 }
-                // mem
-                //  ^
-                'e' => {
-                    let (index, value) = parse_mem_line(line);
-                    state.mem.insert(index, state.apply_bitmasks(value));
+                Line::Mem(address, value) => {
+                    state.mem.insert(*address, state.apply_bitmasks(*value));
                 }
-                _ => panic!("bad line"),
             }
             state
         })
         .mem
         .values()
         .sum()
+}
+
+enum Line {
+    Mask(String),
+    Mem(usize, usize),
+}
+
+fn parse_lines(lines: &[&str]) -> Vec<Line> {
+    lines
+        .iter()
+        .map(|line| {
+            match line.chars().nth(1).unwrap() {
+                // mask
+                //  ^
+                'a' => Line::Mask(line.split(" = ").nth(1).unwrap().to_string()),
+                // mem
+                //  ^
+                'e' => {
+                    let (index, value) = parse_mem_line(line);
+                    Line::Mem(index, value)
+                }
+                _ => panic!("bad line"),
+            }
+        })
+        .collect()
 }
 
 fn parse_mem_line(line: &&str) -> (usize, usize) {
