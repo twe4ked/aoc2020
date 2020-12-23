@@ -145,7 +145,7 @@ fn main() {
     println!("Part 1: {}", part_1);
 
     let part_2 = part_2(&input);
-    assert_eq!(part_2, 99);
+    assert_eq!(part_2, 756261495958122);
     println!("Part 2: {}", part_2);
 }
 
@@ -161,23 +161,54 @@ fn part_2(input: &str) -> usize {
     part_2_inner(&services)
 }
 
-fn part_2_inner(services: &[Service]) -> usize {
-    let iter = services.iter().enumerate().filter_map(|(i, s)| match s {
-        Service::WithTime(t) => Some((i, *t)),
-        Service::AnyTime => None,
-    });
+// https://en.wikipedia.org/wiki/Chinese_remainder_theorem
+fn chinese_remainder_theorem(a1: i128, a2: i128, n1: i128, n2: i128) -> i128 {
+    let (_, m1, _) = modinverse::egcd(n1, n2);
+    (a1 + (a2 - a1) * m1 * n1).rem_euclid(n1 * n2)
+}
 
-    for t in 0.. {
-        // t = (s1 % t == 0 && s2 % t + offset == 0, ..)
-        if iter
-            .clone()
-            .all(|(offset, service)| (t + offset) % service == 0)
-        {
-            return t;
-        };
+fn lst_to_dict(services: &[Service]) -> Vec<(i128, i128)> {
+    services
+        .iter()
+        .enumerate()
+        .filter_map(|(i, s)| match s {
+            Service::WithTime(t) => Some((i, *t)),
+            Service::AnyTime => None,
+        })
+        // c = offset in list
+        // n1 = bus number
+        .map(|(c, n1)| {
+            let c = c as i128;
+            let n1 = n1 as i128;
+            let a1 = (n1 - c) * if c > 0 { 1 } else { 0 } % n1;
+            (n1, a1)
+        })
+        .collect()
+}
+
+fn part_2_inner(services: &[Service]) -> usize {
+    let list = lst_to_dict(services);
+
+    // Initialize
+    let (mut n1, mut a1) = list[0];
+    let (mut n2, mut a2) = list[1];
+
+    let mut rem = chinese_remainder_theorem(a1, a2, n1, n2);
+
+    // Skip 2 (handled above)
+    for (new_n1, new_a1) in list.iter().skip(2) {
+        // Increment product
+        n2 = n1 * n2;
+
+        a2 = rem;
+
+        a1 = *new_a1;
+        n1 = *new_n1;
+
+        rem = chinese_remainder_theorem(a1, a2, n1, n2);
     }
 
-    unreachable!()
+    rem as _
 }
 
 #[derive(Debug, Clone, Copy)]
@@ -264,5 +295,11 @@ mod tests {
     #[test]
     fn readme_example_part_2() {
         assert_eq!(part_2_inner(&services()), 1068781);
+    }
+
+    #[test]
+    fn test_chi_rem() {
+        assert_eq!(chinese_remainder_theorem(0, 12, 7, 13), 77);
+        assert_eq!(chinese_remainder_theorem(55, 77, 59, 91), 350);
     }
 }
