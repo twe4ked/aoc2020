@@ -40,42 +40,6 @@ impl Vec3 {
         assert_eq!(self.x + self.y + self.z, 0);
     }
 
-    fn move_se(&mut self) {
-        self.y -= 1;
-        self.z += 1;
-        self.assert_valid();
-    }
-
-    fn move_nw(&mut self) {
-        self.y += 1;
-        self.z -= 1;
-        self.assert_valid();
-    }
-
-    fn move_sw(&mut self) {
-        self.x -= 1;
-        self.z += 1;
-        self.assert_valid();
-    }
-
-    fn move_ne(&mut self) {
-        self.x += 1;
-        self.z -= 1;
-        self.assert_valid();
-    }
-
-    fn move_w(&mut self) {
-        self.x -= 1;
-        self.y += 1;
-        self.assert_valid();
-    }
-
-    fn move_e(&mut self) {
-        self.x += 1;
-        self.y -= 1;
-        self.assert_valid();
-    }
-
     fn se(&self) -> Self {
         let new = Self {
             x: self.x,
@@ -203,22 +167,22 @@ fn flip_tiles(input: &str) -> HashSet<Vec3> {
 
         loop {
             // E, SE, SW, W, NW, NE
-            match chars.next() {
-                Some('e') => position.move_e(),
+            position = match chars.next() {
+                Some('e') => position.e(),
                 Some('s') => match chars.next() {
-                    Some('e') => position.move_se(),
-                    Some('w') => position.move_sw(),
+                    Some('e') => position.se(),
+                    Some('w') => position.sw(),
                     _ => panic!("bad char following s"),
                 },
-                Some('w') => position.move_w(),
+                Some('w') => position.w(),
                 Some('n') => match chars.next() {
-                    Some('e') => position.move_ne(),
-                    Some('w') => position.move_nw(),
+                    Some('e') => position.ne(),
+                    Some('w') => position.nw(),
                     _ => panic!("bad char following n"),
                 },
                 None => break,
                 _ => panic!("bad char"),
-            }
+            };
         }
 
         if tiles.contains(&position) {
