@@ -6,6 +6,10 @@ fn main() {
     let part_1 = part_1(&input);
     assert_eq!(part_1, 549);
     println!("Part 1: {}", part_1);
+
+    let part_2 = part_2(&input);
+    assert_eq!(part_2, 4147);
+    println!("Part 2: {}", part_2);
 }
 
 // https://www.redblobgames.com/grids/hexagons/
@@ -22,6 +26,14 @@ impl Vec3 {
         let new = Self { x, y, z };
         new.assert_valid();
         new
+    }
+
+    fn try_new(x: isize, y: isize, z: isize) -> Option<Self> {
+        if x + y + z == 0 {
+            Some(Self { x, y, z })
+        } else {
+            None
+        }
     }
 
     fn assert_valid(&self) {
@@ -63,9 +75,126 @@ impl Vec3 {
         self.y -= 1;
         self.assert_valid();
     }
+
+    fn se(&self) -> Self {
+        let new = Self {
+            x: self.x,
+            y: self.y - 1,
+            z: self.z + 1,
+        };
+        new.assert_valid();
+        new
+    }
+
+    fn nw(&self) -> Self {
+        let new = Self {
+            x: self.x,
+            y: self.y + 1,
+            z: self.z - 1,
+        };
+        new.assert_valid();
+        new
+    }
+
+    fn sw(&self) -> Self {
+        let new = Self {
+            x: self.x - 1,
+            y: self.y,
+            z: self.z + 1,
+        };
+        new.assert_valid();
+        new
+    }
+
+    fn ne(&self) -> Self {
+        let new = Self {
+            x: self.x + 1,
+            y: self.y,
+            z: self.z - 1,
+        };
+        new.assert_valid();
+        new
+    }
+
+    fn w(&self) -> Self {
+        let new = Self {
+            x: self.x - 1,
+            y: self.y + 1,
+            z: self.z,
+        };
+        new.assert_valid();
+        new
+    }
+
+    fn e(&self) -> Self {
+        let new = Self {
+            x: self.x + 1,
+            y: self.y - 1,
+            z: self.z,
+        };
+        new.assert_valid();
+        new
+    }
 }
 
 fn part_1(input: &str) -> usize {
+    flip_tiles(input).len()
+}
+
+fn part_2(input: &str) -> usize {
+    let mut world = flip_tiles(input);
+
+    for _ in 0..100 {
+        let old = world.clone();
+
+        let x_min = world.iter().map(|t| t.x).min().unwrap() - 1;
+        let x_max = world.iter().map(|t| t.x).max().unwrap() + 1;
+        let y_min = world.iter().map(|t| t.y).min().unwrap() - 1;
+        let y_max = world.iter().map(|t| t.y).max().unwrap() + 1;
+        let z_min = world.iter().map(|t| t.z).min().unwrap() - 1;
+        let z_max = world.iter().map(|t| t.z).max().unwrap() + 1;
+
+        for x in x_min..=x_max {
+            for y in y_min..=y_max {
+                for z in z_min..=z_max {
+                    if let Some(tile) = Vec3::try_new(x, y, z) {
+                        let count = neighbors(&old, &tile);
+
+                        // Any black tile with zero or more than 2 black tiles immediately adjacent to it is
+                        // flipped to white.
+                        if world.contains(&tile) {
+                            if count == 0 || count > 2 {
+                                world.remove(&tile);
+                            }
+                        // Any white tile with exactly 2 black tiles immediately adjacent to it is flipped to
+                        // black.
+                        } else if count == 2 {
+                            world.insert(tile);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    world.len()
+}
+
+fn neighbors(world: &HashSet<Vec3>, tile: &Vec3) -> usize {
+    vec![
+        world.contains(&tile.se()),
+        world.contains(&tile.nw()),
+        world.contains(&tile.sw()),
+        world.contains(&tile.ne()),
+        world.contains(&tile.w()),
+        world.contains(&tile.e()),
+    ]
+    .iter()
+    .filter(|b| **b)
+    .count()
+}
+
+fn flip_tiles(input: &str) -> HashSet<Vec3> {
     let mut tiles = HashSet::new();
 
     for line in input.lines() {
@@ -99,7 +228,7 @@ fn part_1(input: &str) -> usize {
         }
     }
 
-    tiles.len()
+    tiles
 }
 
 #[cfg(test)]
@@ -130,5 +259,6 @@ neswnwewnwnwseenwseesewsenwsweewe
 wseweeenwnesenwwwswnew";
 
         assert_eq!(part_1(&input), 10);
+        assert_eq!(part_2(&input), 2208);
     }
 }
