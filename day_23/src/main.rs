@@ -4,6 +4,10 @@ fn main() {
     println!("Part 1: {}", part_1);
 }
 
+type Cup = u8;
+type Cups = Vec<Cup>;
+type CupsSlice = [Cup];
+
 fn part_1(input: Cups) -> u64 {
     let mut cups = input;
     let mut current_cup_index = 0;
@@ -38,10 +42,7 @@ fn wrap_add(a: usize, b: usize, min: usize, max: usize) -> usize {
     }
 }
 
-type Cups = Vec<u8>;
-type CupsSlice = [u8];
-
-fn print_cups(cups: &CupsSlice, current_cup_label: u8) {
+fn print_cups(cups: &CupsSlice, current_cup_label: Cup) {
     print!("cups: ");
     for cup in cups {
         if cup == &current_cup_label {
@@ -59,7 +60,6 @@ fn make_move(mut cups: Cups, current_cup_index: usize, move_number: usize) -> (C
     println!("-- move {} --", move_number);
 
     let current_cup_label = cups[current_cup_index];
-    dbg!(current_cup_label, current_cup_index);
 
     print_cups(&cups, current_cup_label);
 
@@ -73,25 +73,17 @@ fn make_move(mut cups: Cups, current_cup_index: usize, move_number: usize) -> (C
     // subtracting one until it finds a cup that wasn't just picked up. If at any point in this
     // process the value goes below the lowest value on any cup's label, it wraps around to the
     // highest value on any cup's label instead.
-    let (destination_cup_label, destination_cup_index) =
+    let (destination_cup_label, destination_cup_idx) =
         select_destination_cup(&cups, current_cup_label);
     println!(
         "destination: {} (idx: {})",
-        destination_cup_label, destination_cup_index
+        destination_cup_label, destination_cup_idx
     );
     println!();
 
     // The crab places the cups it just picked up so that they are immediately clockwise of the
     // destination cup. They keep the same order as when they were picked up.
-    assert_eq!(cups.len(), 6);
-    cups.insert(wrap_add(destination_cup_index, 1, 0, 5), picked_up[0]);
-    assert_eq!(cups.len(), 7);
-    cups.insert(wrap_add(destination_cup_index, 2, 0, 6), picked_up[1]);
-    assert_eq!(cups.len(), 8);
-    cups.insert(wrap_add(destination_cup_index, 3, 0, 7), picked_up[2]);
-
-    let length = cups.len();
-    assert_eq!(length, 9);
+    place_cups(&mut cups, picked_up, destination_cup_idx);
 
     // The crab selects a new current cup: the cup which is immediately clockwise of the current
     // cup.
@@ -100,21 +92,37 @@ fn make_move(mut cups: Cups, current_cup_index: usize, move_number: usize) -> (C
     (cups, new_current_cup_idx)
 }
 
-fn select_destination_cup(cups: &CupsSlice, current_cup_label: u8) -> (u8, usize) {
+fn place_cups(cups: &mut Cups, picked_up: Cups, destination_cup_idx: usize) {
+    assert_eq!(cups.len(), 6);
+
+    let mut idx = wrap_inc(destination_cup_idx, 0, cups.len() - 1);
+    cups.insert(idx, picked_up[0]);
+    assert_eq!(cups.len(), 7);
+
+    idx = wrap_inc(idx, 0, cups.len() - 1);
+    cups.insert(idx, picked_up[1]);
+    assert_eq!(cups.len(), 8);
+
+    idx = wrap_inc(idx, 0, cups.len() - 1);
+    cups.insert(idx, picked_up[2]);
+    assert_eq!(cups.len(), 9);
+}
+
+fn select_destination_cup(cups: &CupsSlice, current_cup_label: Cup) -> (Cup, usize) {
     assert_eq!(cups.len(), 6);
     let mut cup_label = current_cup_label;
     let destination_cup_label = loop {
-        cup_label = wrap_dec(cup_label.into(), 1, 9) as u8;
+        cup_label = wrap_dec(cup_label.into(), 1, 9) as Cup;
 
         if cups.contains(&cup_label) {
             break cup_label;
         }
     };
-    let destination_cup_index = index_from_cup_label(&cups, destination_cup_label);
-    (destination_cup_label, destination_cup_index)
+    let destination_cup_idx = index_from_cup_label(&cups, destination_cup_label);
+    (destination_cup_label, destination_cup_idx)
 }
 
-fn select_new_current_cup_idx(cups: &CupsSlice, current_cup_label: u8) -> usize {
+fn select_new_current_cup_idx(cups: &CupsSlice, current_cup_label: Cup) -> usize {
     assert_eq!(cups.len(), 9);
     let current_cup_index = index_from_cup_label(&cups, current_cup_label);
     wrap_inc(current_cup_index, 0, 8)
@@ -132,7 +140,7 @@ fn pickup_cups(cups: &mut Cups, current_cup_index: usize) -> Cups {
     picked_up
 }
 
-fn index_from_cup_label(cups: &CupsSlice, cup_label: u8) -> usize {
+fn index_from_cup_label(cups: &CupsSlice, cup_label: Cup) -> usize {
     cups.iter().position(|c| c == &cup_label).unwrap()
 }
 
@@ -141,7 +149,7 @@ mod tests {
     use super::*;
 
     #[test]
-    fn readme_example() {
+    fn readme_example_all() {
         let cups = vec![3, 8, 9, 1, 2, 5, 4, 6, 7];
         part_1(cups);
 
@@ -166,7 +174,7 @@ mod tests {
         // cups:  3 (2) 8  9  1  5  4  6  7
         // pick up: 8, 9, 1
         // destination: 7
-        let (cups, current_cup_index) = make_move(cups, 0, 2);
+        let (cups, current_cup_index) = make_move(cups, 1, 2);
         assert_eq!(&cups, &vec![3, 2, 5, 4, 6, 7, 8, 9, 1]);
         assert_eq!(current_cup_index, 2);
 
@@ -174,7 +182,7 @@ mod tests {
         // cups:  3  2 (5) 4  6  7  8  9  1
         // pick up: 4, 6, 7
         // destination: 3
-        let (cups, current_cup_index) = make_move(cups, 0, 3);
+        let (cups, current_cup_index) = make_move(cups, 8, 3);
         assert_eq!(&cups, &vec![7, 2, 5, 8, 9, 1, 3, 4, 6]);
         assert_eq!(current_cup_index, 3);
 
@@ -250,5 +258,25 @@ mod tests {
         let picked_up = pickup_cups(&mut cups, 7);
         assert_eq!(&picked_up, &vec![9, 1, 2]);
         assert_eq!(&cups, &vec![3, 4, 5, 6, 7, 8]);
+    }
+
+    #[test]
+    fn test_select_new_current_cup_idx() {
+        let cups = vec![1, 2, 3, 4, 5, 6, 7, 8, 9];
+        //              ^  ^
+        //              |   ` new (1)
+        //               `old (0)
+
+        let old_cup_label = 1;
+        let new_cup_label = cups[select_new_current_cup_idx(&cups, old_cup_label)];
+
+        assert_eq!(new_cup_label, 2);
+    }
+
+    #[test]
+    fn test_place_cups() {
+        let mut cups = vec![4, 5, 6, 7, 8, 9];
+        place_cups(&mut cups, vec![1, 2, 3], 8);
+        assert_eq!(cups, vec![1, 2, 3, 4, 5, 6, 7, 8, 9]);
     }
 }
