@@ -91,6 +91,8 @@
 //
 // Using your labeling, simulate 100 moves. What are the labels on the cups after cup 1?
 
+use std::fmt::Write;
+
 fn main() {
     let part_1 = part_1(vec![7, 8, 4, 2, 3, 5, 9, 1, 6]);
     // assert_eq!(part_1, 99);
@@ -108,11 +110,24 @@ fn part_1(input: Cups) -> u64 {
         let (new_cups, new_index) = make_move(cups, current_cup_index, move_number);
         cups = new_cups;
         current_cup_index = new_index;
+        assert_ne!(67384529, cups_to_u64(&cups));
     }
 
-    println!("{:?}", cups);
+    println!("{:?}", &cups);
 
-    1
+    cups_to_u64(&cups)
+}
+
+fn cups_to_u64(cups: &CupsSlice) -> u64 {
+    let one_idx = cups.iter().position(|c| c == &1).unwrap();
+    let inc = |n| wrap_inc(n, 0, 8);
+    let mut result = String::new();
+    let mut i = inc(one_idx);
+    for _ in 0..8 {
+        write!(&mut result, "{}", cups[i]).unwrap();
+        i = inc(i);
+    }
+    result.parse().unwrap()
 }
 
 fn wrap_inc(n: usize, min: usize, max: usize) -> usize {
@@ -244,7 +259,7 @@ mod tests {
     #[test]
     fn readme_example_all() {
         let cups = vec![3, 8, 9, 1, 2, 5, 4, 6, 7];
-        part_1(cups);
+        println!("{}", part_1(cups));
 
         todo!("{}", 67384529);
 
